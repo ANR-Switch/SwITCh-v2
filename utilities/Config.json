@@ -1,0 +1,74 @@
+{
+    "datasets_root" : "/Users/jferdelyi/Workspaces/GAMA/Data/",
+    "dataset" : "Castanet Tolosan/CASTANET-TOLOSAN",
+    
+    "car_definition" : {
+        "type" : [
+            "motorway",
+            "trunk",
+            "primary",
+            "secondary",
+            "tertiary",
+            "unclassified",
+            "residential",
+            "motorway_link",
+            "trunk_link",
+            "primary_link",
+            "secondary_link",
+            "tertiary_link",
+            "living_street",
+            "track"
+        ],
+        "foot" : [],
+        "bicycle" : [],
+        "access" : [
+            "yes",
+            "permissive",
+            "nil"
+        ],
+        "bus" : [],
+        "sidewalk" : [],
+        "cycleway" : []
+    },
+
+    "bicycle_definition" : {
+        "type" : [
+            "cycleway",
+            "trunk",
+            "primary",
+            "secondary",
+            "tertiary",
+            "unclassified",
+            "residential",
+            "motorway_link",
+            "trunk_link",
+            "primary_link",
+            "secondary_link",
+            "tertiary_link",
+            "living_street",
+            "track",
+            "path",
+            "pedestrian",
+            "footway"
+        ],
+        "foot" : [],
+        "bicycle" : [
+            "yes",
+            "permissive",
+            "nil"
+        ],
+        "access" : [
+            "yes",
+            "permissive",
+            "nil"
+        ],
+        "bus" : [],
+        "sidewalk" : [],
+        "cycleway" : [
+            "yes",
+            "lane",
+            "track",
+            "nil"
+        ]
+    }
+}

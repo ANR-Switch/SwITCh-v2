@@ -1,0 +1,99 @@
+/**
+* Name: World
+* Entry point of SwITCh simulation.
+* Author: Jean-François Erdelyi 
+* Tags: 
+*/
+
+model SwITCh
+
+import "environment/Road.gaml"
+import "environment/Node.gaml"
+import "environment/Building.gaml"
+import "environment/Individual.gaml"
+
+global {
+	
+	// Get general configuration
+	file config <- json_file("../utilities/Config.json");
+	map<string, unknown> config_data <- config.contents;
+	
+	// Get configs data
+	string dataset <- string(config_data["datasets_root"]) + string(config_data["dataset"]);
+	map<string, unknown> car_definition <- config_data["car_definition"];
+	map<string, unknown> bicycle_definition <- config_data["bicycle_definition"];
+	
+	// Get shapes
+	shape_file shape_buildings <- shape_file(dataset + "/buildings.shp");
+	shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
+	shape_file shape_nodes <- shape_file(dataset + "/nodes.shp");
+	shape_file shape_roads <- shape_file(dataset + "/roads.shp");
+	
+	// Change the geometry of the world
+	geometry shape <- envelope(shape_roads);
+	
+	// Networks
+	graph road_network;
+	graph bicycle_network;
+		
+	init {
+
+		// Create roads from database
+		create Road from: shape_roads with: [
+			type::read("type"),
+			junction::read("junction"),
+			max_speed::float(read("max_speed")),
+			nb_lanes::int(read("nb_lanes")),
+			oneway::read("oneway"),
+			foot::read("foot"),
+			bicycle::read("bicycle"),
+			access::read("access"),
+			bus::read("bus"),
+			parking_lane::read("parking_la"),
+			sidewalk::read("sidewalk"),
+			cycleway::read("cycleway")
+		];
+		
+		// Create nodes
+		create Node from: shape_nodes;
+
+		// Create buildings from database
+		create Building from: shape_buildings with: [
+			id::int(read("id")), 
+			type::read("type")
+		];
+		
+		// Create individuals from database
+		create Individual from: shape_individuals with: [
+			working_place::one_of(Building where (each.id = read("work_pl"))), 
+			home_place::one_of(Building where (each.id = read("home_pl")))
+		];
+		
+		// Get networks from roads definitions
+		list<string> roads_type;
+		road_network <- as_edge_graph(Road 
+			where (each.type = one_of(car_definition["type"]) 
+				and each.access = one_of(car_definition["access"])
+			)
+		);
+		bicycle_network <- as_edge_graph(Road 
+			where (each.type = one_of(bicycle_definition["type"]) 
+				and ((each.type = one_of(bicycle_definition["access"]))
+					or (each.bicycle = one_of(bicycle_definition["bicycle"]))
+					or (each.cycleway = one_of(bicycle_definition["cycleway"]))
+				)
+	 		)
+	 	);
+	}
+}
+
+experiment SwITCh type: gui {	
+	output {
+		display main_window type: opengl {	
+			species Road;
+			species Node;
+			species Building;
+			species Individual;
+		}
+	}
+}
