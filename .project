@@ -15,26 +15,4 @@
 		<nature>org.eclipse.xtext.ui.shared.xtextNature</nature>
 		<nature>msi.gama.application.gamaNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>external/buildings.shp</name>
-			<type>1</type>
-			<location>/Users/jferdelyi/Workspaces/GAMA/Data/Castanet Tolosan/CASTANET-TOLOSAN/buildings.shp</location>
-		</link>
-		<link>
-			<name>external/individuals.shp</name>
-			<type>1</type>
-			<location>/Users/jferdelyi/Workspaces/GAMA/Data/Castanet Tolosan/CASTANET-TOLOSAN/individuals.shp</location>
-		</link>
-		<link>
-			<name>external/nodes.shp</name>
-			<type>1</type>
-			<location>/Users/jferdelyi/Workspaces/GAMA/Data/Castanet Tolosan/CASTANET-TOLOSAN/nodes.shp</location>
-		</link>
-		<link>
-			<name>external/roads.shp</name>
-			<type>1</type>
-			<location>/Users/jferdelyi/Workspaces/GAMA/Data/Castanet Tolosan/CASTANET-TOLOSAN/roads.shp</location>
-		</link>
-	</linkedResources>
 </projectDescription>

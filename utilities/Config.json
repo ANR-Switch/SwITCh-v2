@@ -1,5 +1,5 @@
 {
-    "datasets_root" : "/Users/jferdelyi/Workspaces/GAMA/Data/",
+    "datasets_root" : "../../Data/",
     "dataset" : "Castanet Tolosan/CASTANET-TOLOSAN",
     
     "car_definition" : {
