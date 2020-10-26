@@ -7,11 +7,13 @@
 
 model SwITCh
 
-import "Building.gaml"
+import "../Building.gaml"
+import "Agenda.gaml"
 
 species Individual {
-	// **************** From database
-
+	// The agenda
+	Agenda my_agenda <- world.createAgenda();	
+	
 	// The working place
 	Building working_place <- nil;
 	
