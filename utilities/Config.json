@@ -1,5 +1,5 @@
 {
-    "datasets_root" : "../../Data/",
+    "datasets_root" : "../Data/",
     "dataset" : "Castanet Tolosan/CASTANET-TOLOSAN",
     
     "car_definition" : {

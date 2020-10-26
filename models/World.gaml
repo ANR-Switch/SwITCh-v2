@@ -7,12 +7,16 @@
 
 model SwITCh
 
-import "environment/Road.gaml"
-import "environment/Node.gaml"
-import "environment/Building.gaml"
-import "environment/Individual.gaml"
+import "Species/Network/Building.gaml"
+
+import "Species/Network/Road.gaml"
+import "Species/Network/Crossroad.gaml"
+import "Species/Individual/Individual.gaml"
 
 global {
+	
+	// Starting date of the simulation 
+	date starting_date <- date([1970,1,1,0,0,0]);
 	
 	// Get general configuration
 	file config <- json_file("../utilities/Config.json");
@@ -55,7 +59,7 @@ global {
 		];
 		
 		// Create nodes
-		create Node from: shape_nodes;
+		create Crossroad from: shape_nodes;
 
 		// Create buildings from database
 		create Building from: shape_buildings with: [
@@ -91,7 +95,7 @@ experiment SwITCh type: gui {
 	output {
 		display main_window type: opengl {	
 			species Road;
-			species Node;
+			species Crossroad;
 			species Building;
 			species Individual;
 		}
