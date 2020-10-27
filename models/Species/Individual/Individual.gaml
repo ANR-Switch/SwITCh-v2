@@ -6,7 +6,7 @@
 */
 
 model SwITCh
-
+
 import "../Network/Building.gaml"
 import "Agenda.gaml"
 
