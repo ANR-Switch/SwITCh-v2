@@ -7,17 +7,16 @@
 
 model SwITCh
 
-import "Species/Network/Building.gaml"
-
+import "Species/Individual/Individual.gaml"
+import "Species/Building.gaml"
 import "Species/Network/Road.gaml"
 import "Species/Network/Crossroad.gaml"
-import "Species/Individual/Individual.gaml"
 
 global {
 	
 	// Starting date of the simulation 
 	date starting_date <- date([1970,1,1,0,0,0]);
-	
+		
 	// Get general configuration
 	file config <- json_file("../utilities/Config.json");
 	map<string, unknown> config_data <- config.contents;

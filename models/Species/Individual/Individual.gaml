@@ -7,7 +7,7 @@
 model SwITCh
 
 import "../Transport/Trip.gaml"
-import "../Network/Building.gaml"
+import "../Building.gaml"
 import "Agenda.gaml"
 species Individual {
 	
