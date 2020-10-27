@@ -6,7 +6,8 @@
 */ model SwITCh
 
 global {
-	list<string> activity_types <- ["shopping", "administration", "studying", "university", "familly", "healt", "leisure", "work", "other"];
+	list<string> activity_types const:true <- ["shopping", "administration", "studying", "university", "familly", "healt", "leisure", "work", "other"];
+	
 	Activity createActivity (date starting_time, int activity_type, float activity_duration) {
 		create Activity returns: children {
 			self.starting_time <- starting_time;
