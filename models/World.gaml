@@ -76,12 +76,12 @@ global {
 		
 		// Get networks from roads definitions
 		list<string> roads_type;
-		road_network <- as_edge_graph(Road 
+		road_network <- as_edge_graph( agents of_generic_species(Road) 
 			where (each.type = one_of(car_definition["type"]) 
 				and each.access = one_of(car_definition["access"])
 			)
 		);
-		bicycle_network <- as_edge_graph(Road 
+		bicycle_network <- as_edge_graph( agents of_generic_species(Road) 
 			where (each.type = one_of(bicycle_definition["type"]) 
 				and ((each.type = one_of(bicycle_definition["access"]))
 					or (each.bicycle = one_of(bicycle_definition["bicycle"]))
@@ -90,8 +90,7 @@ global {
 	 		)
 	 	);
 	 	
-	 	
-	 	ask Road {
+	 	ask agents of_generic_species(Road) {
 			start_node <- road_network source_of self;
 			end_node <- road_network target_of self;
 			
