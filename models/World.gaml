@@ -46,6 +46,7 @@ global {
 	// Networks
 	graph road_network;
 	graph bicycle_network;
+	graph osm_network;
 		
 	init {
 
@@ -65,6 +66,7 @@ global {
 			cycleway::read("cycleway")
 		];
 		
+		
 		// Create nodes
 		create Crossroad from: shape_nodes;
 
@@ -81,26 +83,26 @@ global {
 //		];
 		
 		// Get networks from roads definitions
-		road_network <- as_edge_graph(roads 
+		
+		osm_network <- directed(as_edge_graph(roads));
+		
+		road_network <- directed(as_edge_graph(roads 
 			where ((car_definition["type"] contains each.type) 
-				and (car_definition["access"] contains each.access)), 
-		Crossroad);
+				or (car_definition["access"] contains each.access)), 
+		Crossroad));
+			
 		
-		write road_network.vertices;
-		write road_network.edges;
-		
-		
-		bicycle_network <- as_edge_graph(roads 
+		bicycle_network <- directed(as_edge_graph(roads 
 			where ((bicycle_definition["type"] contains each.type) 
 				and (bicycle_definition["access"] contains each.type)
 					or (bicycle_definition["bicycle"] contains each.bicycle)
 					or (bicycle_definition["cycleway"] contains each.cycleway)
 			),
-	 	Crossroad);
+	 	Crossroad));
 	 	
 	 	ask roads {
-			start_node <- road_network source_of self;
-			end_node <- road_network target_of self;
+			start_node <- osm_network source_of self;
+			end_node <- osm_network target_of self;
 			
 			//don't know why some roads have a nil start...
 			if (start_node = nil or end_node = nil) {

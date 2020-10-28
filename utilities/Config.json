@@ -1,4 +1,4 @@
 {
-    "datasets_root" : "../../Tools/Datasets/",
-    "dataset" : "Castanet Tolosan/CASTANET-TOLOSAN"
+    "datasets_root" : "../../../Switch_v1/SWITCH/Datasets/",
+    "dataset" : "Castanet Tolosan/CASTANET-TOLOSAN",
 }
