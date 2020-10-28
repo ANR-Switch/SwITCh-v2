@@ -40,6 +40,8 @@ species Individual {
 			ask currentTrip {
 				do start(myself.location,date('now'));
 			}
+		}else{
+			// Je suis arrivé!
 		}
 	}
 
