@@ -7,10 +7,17 @@
 model SWITCH
 
 import "../Network/Road.gaml"
+import "../Individual/Individual.gaml"
 species Transport virtual: true {
 
-	//list of roads that lead to the target
+//list of roads that lead to the target
 	list<Road> path_to_target;
+
+	// Travelers
+	list<Individual> passengers <- [];
+
+	//road graph available for the transport
+	graph<Crossroad, Road> available_graph;
 
 	// maximum speed for a transport (km/h)
 	float max_speed;
@@ -20,14 +27,40 @@ species Transport virtual: true {
 
 	//passenger capacity 
 	int max_passenger;
+	
+	bool isStarting <- true;
+	
+	bool getIn (Individual i) {
+		if (length(passengers) < max_passenger) {
+			add item: i to: passengers;
+			return true;
+		}
+		return false;
+	}
 
-	action start (point target_pos) virtual: true;
+	action getOut (Individual i) {
+		remove item: i from: passengers;
+	}
+
+	action start (point start_location, point end_location, date start_time) {
+		isStarting <- true;
+		path the_path <- path_between(available_graph, start_location, end_location);
+		if (the_path = nil) {
+			write "PATH NIL //// TELEPORTATION ACTIVEEE !!!!!!";
+			do end(start_time);
+		} else {
+			path_to_target <- list<Road>(the_path.edges);
+			do changeRoad(start_time);
+		}
+
+	}
 
 	action end (date arrived_time) virtual: true;
 
 	action changeRoad (date signal_time) {
-		// Leave the current road
-		if hasNextRoad() {
+	// Leave the current road
+		if not isStarting and hasNextRoad() {
+			isStarting <- false;
 			ask getCurrentRoad() {
 				do leave(myself, signal_time);
 			}
@@ -38,12 +71,20 @@ species Transport virtual: true {
 
 		// Join the next road
 		if hasNextRoad() {
+			do updatePassengerPosition();
 			ask getCurrentRoad() {
 				do join(myself, signal_time);
 			}
 
 		} else {
 			do end(signal_time);
+		}
+
+	}
+
+	action updatePassengerPosition {
+		loop passenger over: passengers {
+			passenger.location <- getCurrentRoad().start_node.location;
 		}
 
 	}

@@ -16,9 +16,9 @@ species Trip {
 	
 	point target_pos;
 	
-	action start{
+	action start(point position, date start_time){
 		ask transport {
-			do start(myself.target_pos); 
+			do start(position,myself.target_pos,start_time); 
 		}
 	}
 }

@@ -38,7 +38,7 @@ species Individual {
 			Trip currentTrip <- popTrip(); 
 			current_transport <- currentTrip.transport;
 			ask currentTrip {
-				do start();
+				do start(myself.location,date('now'));
 			}
 		}
 	}
