@@ -7,7 +7,9 @@
 
 model SwITCh
 
-species Road {
+import "../Transport/Transport.gaml"
+
+species Road virtual:true{
 
 	// **************** From database
 
@@ -48,6 +50,10 @@ species Road {
 	string cycleway;
 	
 	// ****************
+	
+	action join(Transport t, date request_time) virtual:true;
+	
+	action leave(Transport t, date request_time) virtual:true;
 
 	aspect default {
 		draw shape color: #darkgray;

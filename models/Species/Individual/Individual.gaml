@@ -13,7 +13,7 @@ species Individual {
 	
 	// The agenda
 	Agenda my_agenda <- world.createAgenda();
-	queue trip_chain;
+	queue<Trip> trip_chain;
 
 	// Current Transport
 	Transport current_transport;
