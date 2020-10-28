@@ -60,6 +60,12 @@ species Road virtual:true{
 	
 	// ****************
 	
+	//maximum space capacity of the road (in meters)
+	float max_capacity <- shape.perimeter * nb_lanes min: 15.0;
+
+	//actual free space capacity of the road (in meters)
+	float current_capacity <- max_capacity min: 0.0 max: max_capacity;
+	
 	action join(Transport t, date request_time) virtual:true;
 	
 	action leave(Transport t, date request_time) virtual:true;
@@ -71,6 +77,10 @@ species Road virtual:true{
 	date getFreeFlowTravelTime(Transport t){
 			float max_freeflow_speed <- min([t.max_speed, max_speed]) #km / #h;
 			return date("now") + (getSize() / max_freeflow_speed);
+	}
+	
+	bool hasCapacity (float capacity) {
+		return current_capacity > capacity;
 	}
 
 	aspect default {
