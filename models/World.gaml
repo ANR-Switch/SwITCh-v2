@@ -7,6 +7,8 @@
 
 model SwITCh
 
+import "Species/Network/Road_Models/Simple_Road_Model.gaml"
+
 import "Species/Individual/Individual.gaml"
 import "Species/Building.gaml"
 import "Species/Network/Road.gaml"
@@ -42,7 +44,7 @@ global {
 	init {
 
 		// Create roads from database
-		create Road from: shape_roads with: [
+		create Simple_Road_Model from: shape_roads with: [
 			type::read("type"),
 			junction::read("junction"),
 			max_speed::float(read("max_speed")),
