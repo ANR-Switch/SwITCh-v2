@@ -28,7 +28,7 @@ species Transport virtual: true {
 	//passenger capacity 
 	int max_passenger;
 	
-	bool isStarting <- true;
+	bool isMoving <- false;
 	
 	bool getIn (Individual i) {
 		if (length(passengers) < max_passenger) {
@@ -43,7 +43,7 @@ species Transport virtual: true {
 	}
 
 	action start (point start_location, point end_location, date start_time) {
-		isStarting <- true;
+		isMoving <- true;
 		path the_path <- path_between(available_graph, start_location, end_location);
 		if (the_path = nil) {
 			write "PATH NIL //// TELEPORTATION ACTIVEEE !!!!!!";
@@ -59,13 +59,13 @@ species Transport virtual: true {
 
 	action changeRoad (date signal_time) {
 	// Leave the current road
-		if not isStarting and hasNextRoad() {
-			isStarting <- false;
+		if isMoving and hasNextRoad() {
 			ask getCurrentRoad() {
 				do leave(myself, signal_time);
 			}
-
 		}
+		
+		isMoving <- true;
 
 		remove first(path_to_target) from: path_to_target;
 
