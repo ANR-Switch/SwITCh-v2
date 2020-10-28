@@ -101,6 +101,23 @@ species Transport virtual: true {
 		}
 
 	}
+	
+	Road getCurrentRoad {
+		if length(path_to_target) > 0 {
+			return path_to_target[0];
+		} else {
+			return nil;
+		}
+
+	}
+	
+	Road getNextRoad {
+		if (hasNextRoad()) {
+			return path_to_target[1];
+		} else {
+			return nil;
+		}
+	}
 
 }
 

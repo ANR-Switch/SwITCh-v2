@@ -84,7 +84,7 @@ species Road virtual:true{
 	}
 
 	aspect default {
-		draw shape color: #darkgray;
+		geometry geom_display <- (shape + (2.0));	
 	}
 	
 }
