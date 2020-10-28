@@ -25,14 +25,17 @@ global {
 	
 	// Get configs data
 	string dataset <- string(config_data["datasets_root"]) + string(config_data["dataset"]);
-	map<string, unknown> car_definition <- config_data["car_definition"];
-	map<string, unknown> bicycle_definition <- config_data["bicycle_definition"];
+	map<string, list> car_definition <- config_data["car_definition"];
+	map<string, list> bicycle_definition <- config_data["bicycle_definition"];
 	
 	// Get shapes
 	shape_file shape_buildings <- shape_file(dataset + "/buildings.shp");
 	shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
 	shape_file shape_nodes <- shape_file(dataset + "/nodes.shp");
 	shape_file shape_roads <- shape_file(dataset + "/roads.shp");
+	
+	// TODO : to review : init value when all agents created or a  function ?  s
+	list<Road> roads -> {agents of_generic_species Road};
 	
 	// Change the geometry of the world
 	geometry shape <- envelope(shape_roads);
@@ -47,8 +50,8 @@ global {
 		create Simple_Road_Model from: shape_roads with: [
 			type::read("type"),
 			junction::read("junction"),
-			max_speed::float(read("max_speed")),
-			nb_lanes::int(read("nb_lanes")),
+			max_speed::float(read("maxspeed")),
+			nb_lanes::int(read("lanes")),
 			oneway::read("oneway"),
 			foot::read("foot"),
 			bicycle::read("bicycle"),
@@ -75,28 +78,25 @@ global {
 		];
 		
 		// Get networks from roads definitions
-		list<string> roads_type;
-		road_network <- as_edge_graph( agents of_generic_species(Road) 
-			where (each.type = one_of(car_definition["type"]) 
-				and each.access = one_of(car_definition["access"])
-			)
-		);
-		bicycle_network <- as_edge_graph( agents of_generic_species(Road) 
-			where (each.type = one_of(bicycle_definition["type"]) 
-				and ((each.type = one_of(bicycle_definition["access"]))
-					or (each.bicycle = one_of(bicycle_definition["bicycle"]))
-					or (each.cycleway = one_of(bicycle_definition["cycleway"]))
-				)
-	 		)
-	 	);
+		road_network <- as_edge_graph(roads 
+			where ((car_definition["type"] contains each.type) 
+				and (car_definition["access"] contains each.access)), 
+		Crossroad);
+		bicycle_network <- as_edge_graph(roads 
+			where ((bicycle_definition["type"] contains each.type) 
+				and (bicycle_definition["access"] contains each.type)
+					or (bicycle_definition["bicycle"] contains each.bicycle)
+					or (bicycle_definition["cycleway"] contains each.cycleway)
+			),
+	 	Crossroad);
 	 	
-	 	ask agents of_generic_species(Road) {
+	 	ask roads {
 			start_node <- road_network source_of self;
 			end_node <- road_network target_of self;
 			
 			//don't know why some roads have a nil start...
 			if (start_node = nil or end_node = nil) {
-				do die;
+	//			do die;
 			}
 
 			point A <- start_node.location;
