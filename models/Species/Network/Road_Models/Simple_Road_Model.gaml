@@ -23,4 +23,9 @@ species Simple_Road_Model parent: Road{
 		remove item:t from: transports;
 	}
 	
+	aspect default {
+		geometry geom_display <- (shape + (2.0));	
+		draw geom_display;
+	}
+	
 }

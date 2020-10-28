@@ -21,6 +21,7 @@ species Road virtual:true{
 	Crossroad end_node;
 
 	// **************** From database
+	point trans;
 
 	// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
 	string type;
@@ -85,6 +86,7 @@ species Road virtual:true{
 
 	aspect default {
 		geometry geom_display <- (shape + (2.0));	
+		draw geom_display translated_by(trans*2) border: #gray color: rgb(255 * (max_capacity - current_capacity) / max_capacity, 0, 0);
 	}
 	
 }

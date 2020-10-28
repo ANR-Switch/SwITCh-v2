@@ -89,6 +89,35 @@ global {
 				)
 	 		)
 	 	);
+	 	
+	 	
+	 	ask Road {
+			start_node <- road_network source_of self;
+			end_node <- road_network target_of self;
+			
+			//don't know why some roads have a nil start...
+			if (start_node = nil or end_node = nil) {
+				do die;
+			}
+
+			point A <- start_node.location;
+			point B <- end_node.location;
+			if (A = B) {
+				trans <- {0, 0};
+			} else {
+				point u <- {-(B.y - A.y) / (B.x - A.x), 1};
+				float angle <- angle_between(A, B, A + u);
+				// write sample(int(angle));
+				// write sample(norm(u));
+				if (angle < 150) {
+					trans <- u / norm(u);
+				} else {
+					trans <- -u / norm(u);
+				}
+
+			}
+
+		}
 	}
 }
 
@@ -96,6 +125,7 @@ experiment SwITCh type: gui {
 	output {
 		display main_window type: opengl {	
 			species Road;
+			species Simple_Road_Model;
 			species Crossroad;
 			species Building;
 			species Individual;
