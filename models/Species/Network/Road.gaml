@@ -7,9 +7,18 @@
 
 model SwITCh
 
+import "Crossroad.gaml"
+
 import "../Transport/Transport.gaml"
 
+
 species Road virtual:true{
+	
+	//start crossroad node
+	Crossroad start_node;
+
+	//end crossroad node
+	Crossroad end_node;
 
 	// **************** From database
 
@@ -54,6 +63,15 @@ species Road virtual:true{
 	action join(Transport t, date request_time) virtual:true;
 	
 	action leave(Transport t, date request_time) virtual:true;
+	
+	float getSize{
+		return shape.perimeter;
+	}
+	
+	date getFreeFlowTravelTime(Transport t){
+			float max_freeflow_speed <- min([t.max_speed, max_speed]) #km / #h;
+			return date("now") + (getSize() / max_freeflow_speed);
+	}
 
 	aspect default {
 		draw shape color: #darkgray;
