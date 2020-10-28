@@ -1,0 +1,70 @@
+{
+    "car_definition" : {
+        "type" : [
+            "motorway",
+            "trunk",
+            "primary",
+            "secondary",
+            "tertiary",
+            "unclassified",
+            "residential",
+            "motorway_link",
+            "trunk_link",
+            "primary_link",
+            "secondary_link",
+            "tertiary_link",
+            "living_street",
+            "track"
+        ],
+        "foot" : [],
+        "bicycle" : [],
+        "access" : [
+            "yes",
+            "permissive",
+            ""
+        ],
+        "bus" : [],
+        "sidewalk" : [],
+        "cycleway" : []
+    },
+
+    "bicycle_definition" : {
+        "type" : [
+            "cycleway",
+            "primary",
+            "secondary",
+            "tertiary",
+            "unclassified",
+            "residential",
+            "motorway_link",
+            "trunk_link",
+            "primary_link",
+            "secondary_link",
+            "tertiary_link",
+            "living_street",
+            "track",
+            "path",
+            "pedestrian",
+            "footway"
+        ],
+        "foot" : [],
+        "bicycle" : [
+            "yes",
+            "permissive",
+            ""
+        ],
+        "access" : [
+            "yes",
+            "permissive",
+            ""
+        ],
+        "bus" : [],
+        "sidewalk" : [],
+        "cycleway" : [
+            "yes",
+            "lane",
+            "track",
+            ""
+        ]
+    }
+}

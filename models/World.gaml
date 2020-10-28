@@ -23,14 +23,17 @@ global {
 	file config <- json_file("../utilities/Config.json");
 	map<string, unknown> config_data <- config.contents;
 	
+	file osm_road_type_json <- json_file("../Parameters/OSM road types.json");
+	map<string, unknown> osm_road_type_data <- osm_road_type_json.contents;
+	
 	// Get configs data
 	string dataset <- string(config_data["datasets_root"]) + string(config_data["dataset"]);
-	map<string, list> car_definition <- config_data["car_definition"];
-	map<string, list> bicycle_definition <- config_data["bicycle_definition"];
+	map<string, list> car_definition <- osm_road_type_data["car_definition"];
+	map<string, list> bicycle_definition <- osm_road_type_data["bicycle_definition"];
 	
 	// Get shapes
 	shape_file shape_buildings <- shape_file(dataset + "/buildings.shp");
-	shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
+//	shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
 	shape_file shape_nodes <- shape_file(dataset + "/nodes.shp");
 	shape_file shape_roads <- shape_file(dataset + "/roads.shp");
 	
@@ -72,16 +75,21 @@ global {
 		];
 		
 		// Create individuals from database
-		create Individual from: shape_individuals with: [
-			working_place::one_of(Building where (each.id = read("work_pl"))), 
-			home_place::one_of(Building where (each.id = read("home_pl")))
-		];
+//		create Individual from: shape_individuals with: [
+//			working_place::one_of(Building where (each.id = read("work_pl"))), 
+//			home_place::one_of(Building where (each.id = read("home_pl")))
+//		];
 		
 		// Get networks from roads definitions
 		road_network <- as_edge_graph(roads 
 			where ((car_definition["type"] contains each.type) 
 				and (car_definition["access"] contains each.access)), 
 		Crossroad);
+		
+		write road_network.vertices;
+		write road_network.edges;
+		
+		
 		bicycle_network <- as_edge_graph(roads 
 			where ((bicycle_definition["type"] contains each.type) 
 				and (bicycle_definition["access"] contains each.type)
