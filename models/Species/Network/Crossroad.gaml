@@ -1,14 +1,14 @@
 /**
 * Name: Crossroad
 * Based on the internal empty template. 
-* Author: Lo�c
+* Author: 
 * Tags: 
 */
 
 
 model SwITCh
 
-species Crossroad{
+species Crossroad {
 	
 	//OSM type (highway feature for node: https://wiki.openstreetmap.org/wiki/Key:highway) 
 	string type;
@@ -17,6 +17,7 @@ species Crossroad{
 	string crossing;
 	
 	list<string> sub_areas;
+	
 	aspect default {
 		draw circle(3) color: #grey border: #black;
 	}
@@ -25,6 +26,4 @@ species Crossroad{
 		draw circle(10) color: #grey border: #black;
 		draw type at: location+point([15,-5]) size:10 color:#black;
 	}
-	
 }
-

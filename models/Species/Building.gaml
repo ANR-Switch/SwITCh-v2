@@ -8,10 +8,10 @@ model SwITCh
 
 global {
 	//The list of activities
-	string blg_type_home <- "home";	
-	string blg_type_work <- "work";
-	string blg_type_school <- "school";
-	string blg_type_shop <- "shop";
+	string blg_type_home <- "staying_home";	
+	string blg_type_work <- "working";
+	string blg_type_school <- "studying";
+	string blg_type_shop <- "shopping";
 	string blg_type_leisure <- "leisure";
 	string blg_type_default <- "default";
 	
@@ -33,7 +33,7 @@ species Building {
 	float size <- shape.perimeter;
 
 	aspect default {
-		draw shape color: (type in blg_colors.keys)?blg_colors[type]:blg_color_default border: #black;
+		draw shape color: (type in blg_colors.keys) ? blg_colors[type] : blg_color_default border: #black;
 	}
 }
 
