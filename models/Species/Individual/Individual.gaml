@@ -33,12 +33,12 @@ species Individual {
 		return pop(trip_chain);
 	}
 
-	action executeTripChain {
+	action executeTripChain(date start_time) {
 		if length(trip_chain) > 0 {
 			Trip currentTrip <- popTrip(); 
 			current_transport <- currentTrip.transport;
 			ask currentTrip {
-				do start(myself.location,date('now'));
+				do start(myself.location,start_time);
 			}
 		}else{
 			// Je suis arrivé!

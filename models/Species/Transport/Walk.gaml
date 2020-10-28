@@ -24,7 +24,7 @@ species Walk parent: PrivateTransport {
 		do updatePassengerPosition();
 		loop passenger over:passengers{
 			ask passenger{ 
-				do executeTripChain();
+				do executeTripChain(arrived_time);
 			}
 		}
 		do die;
