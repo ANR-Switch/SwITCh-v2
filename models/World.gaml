@@ -46,10 +46,8 @@ global {
 	// Networks
 	graph road_network;
 	graph bicycle_network;
-	graph osm_network;
 		
 	init {
-
 		// Create roads from database
 		create Simple_Road_Model from: shape_roads with: [
 			type::read("type"),
@@ -82,15 +80,11 @@ global {
 //			home_place::one_of(Building where (each.id = read("home_pl")))
 //		];
 		
-		// Get networks from roads definitions
-		
-		osm_network <- directed(as_edge_graph(roads));
-		
+		// Get networks from roads definitions		
 		road_network <- directed(as_edge_graph(roads 
 			where ((car_definition["type"] contains each.type) 
 				or (car_definition["access"] contains each.access)), 
-		Crossroad));
-			
+		Crossroad));	
 		
 		bicycle_network <- directed(as_edge_graph(roads 
 			where ((bicycle_definition["type"] contains each.type) 
@@ -101,8 +95,8 @@ global {
 	 	Crossroad));
 	 	
 	 	ask roads {
-			start_node <- osm_network source_of self;
-			end_node <- osm_network target_of self;
+			start_node <- Crossroad(first(self.shape.points));
+			end_node <- Crossroad(last(self.shape.points));
 			
 			//don't know why some roads have a nil start...
 			if (start_node = nil or end_node = nil) {
