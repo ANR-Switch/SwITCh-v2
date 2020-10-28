@@ -55,6 +55,8 @@ species Road virtual:true{
 
 	// Is used to give information about footways
 	string sidewalk;
+	
+	int lanes;
 
 	// Can be used to describe any cycle lanes constructed within the carriageway or cycle tracks running parallel to the carriageway.
 	string cycleway;
@@ -85,7 +87,7 @@ species Road virtual:true{
 	}
 
 	aspect default {
-		geometry geom_display <- (shape + (2.0));	
+		geometry geom_display <- (shape + lanes);	
 		draw geom_display translated_by(trans*2) border: #gray color: rgb(255 * (max_capacity - current_capacity) / max_capacity, 0, 0);
 	}
 	

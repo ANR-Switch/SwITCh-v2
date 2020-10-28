@@ -24,8 +24,8 @@ species Simple_Road_Model parent: Road{
 	}
 	
 	aspect default {
-		geometry geom_display <- (shape + (2.0));	
-		draw geom_display;
+		geometry geom_display <- (shape + lanes);	
+		draw geom_display translated_by(trans*2) border: #gray color: rgb(255 * (max_capacity - current_capacity) / max_capacity, 0, 0);
 	}
 	
 }
