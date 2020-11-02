@@ -22,10 +22,4 @@ species Simple_Road_Model parent: Road{
 	action leave(Transport t, date request_time){
 		remove item:t from: transports;
 	}
-	
-	aspect default {
-		geometry geom_display <- (shape + lanes);	
-		draw geom_display translated_by(trans*2) border: #gray color: rgb(255 * (max_capacity - current_capacity) / max_capacity, 0, 0);
-	}
-	
 }
