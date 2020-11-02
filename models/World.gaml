@@ -7,6 +7,8 @@
 
 model SwITCh
 
+import "Utilities/Event_Manager.gaml"
+
 import "Species/Network/Road_Models/Simple_Road_Model.gaml"
 
 import "Species/Individual/Individual.gaml"
@@ -48,6 +50,8 @@ global {
 	graph bicycle_network;
 		
 	init {
+		create Event_Manager;
+		
 		// Create roads from database
 		create Simple_Road_Model from: shape_roads with: [
 			type::read("type"),

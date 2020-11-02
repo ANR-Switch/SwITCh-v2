@@ -6,11 +6,15 @@
 */
 model SWITCH
 
+import "../../Utilities/Event_Manager.gaml"
+
 import "../Network/Road.gaml"
 import "../Individual/Individual.gaml"
-species Transport virtual: true {
-
-//list of roads that lead to the target
+species Transport virtual: true skills: [scheduling] {
+	// The manager
+	agent event_manager <- Event_Manager[0];
+	
+	//list of roads that lead to the target
 	list<Road> path_to_target;
 
 	// Travelers
@@ -27,14 +31,13 @@ species Transport virtual: true {
 
 	//passenger capacity 
 	int max_passenger;
-	
 	bool isMoving <- false;
-	
 	bool getIn (Individual i) {
 		if (length(passengers) < max_passenger) {
 			add item: i to: passengers;
 			return true;
 		}
+
 		return false;
 	}
 
@@ -63,10 +66,10 @@ species Transport virtual: true {
 			ask getCurrentRoad() {
 				do leave(myself, signal_time);
 			}
-		}
-		
-		isMoving <- true;
 
+		}
+
+		isMoving <- true;
 		remove first(path_to_target) from: path_to_target;
 
 		// Join the next road
@@ -101,7 +104,7 @@ species Transport virtual: true {
 		}
 
 	}
-	
+
 	Road getCurrentRoad {
 		if length(path_to_target) > 0 {
 			return path_to_target[0];
@@ -110,13 +113,14 @@ species Transport virtual: true {
 		}
 
 	}
-	
+
 	Road getNextRoad {
 		if (hasNextRoad()) {
 			return path_to_target[1];
 		} else {
 			return nil;
 		}
+
 	}
 
 }
