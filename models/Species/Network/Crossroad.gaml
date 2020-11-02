@@ -1,29 +1,27 @@
 /**
 * Name: Crossroad
-* Based on the internal empty template. 
-* Author: 
+* Is the node of road graph.  
+* Author: Jean-François Erdelyi
 * Tags: 
 */
-
-
 model SwITCh
 
+/** 
+ * Crossroad species
+ */
 species Crossroad {
 	
-	//OSM type (highway feature for node: https://wiki.openstreetmap.org/wiki/Key:highway) 
+	// OSM type (highway feature for node: https://wiki.openstreetmap.org/wiki/Key:highway) 
 	string type;
 	
-	//OSM information on crossroad (see https://wiki.openstreetmap.org/wiki/Tag:highway%3Dcrossing)
+	// OSM information on crossroad (see https://wiki.openstreetmap.org/wiki/Tag:highway%3Dcrossing)
 	string crossing;
 	
+	// Subarea (if the world is composed of several areas)
 	list<string> sub_areas;
 	
+	// Default aspect
 	aspect default {
 		draw circle(3) color: #grey border: #black;
-	}
-	
-	aspect roadTest{
-		draw circle(10) color: #grey border: #black;
-		draw type at: location+point([15,-5]) size:10 color:#black;
 	}
 }

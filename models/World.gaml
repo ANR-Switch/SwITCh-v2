@@ -4,18 +4,18 @@
 * Author: Jean-François Erdelyi 
 * Tags: 
 */
-
 model SwITCh
 
-import "Utilities/Event_Manager.gaml"
-
-import "Species/Network/Road_Models/Simple_Road_Model.gaml"
-
+import "Utilities/EventManager.gaml"
+import "Species/Network/RoadModels/SimpleRoadModel.gaml"
 import "Species/Individual/Individual.gaml"
 import "Species/Building.gaml"
 import "Species/Network/Road.gaml"
 import "Species/Network/Crossroad.gaml"
 
+/** 
+ * Setup the world
+ */
 global {
 	
 	// Starting date of the simulation 
@@ -35,7 +35,7 @@ global {
 	
 	// Get shapes
 	shape_file shape_buildings <- shape_file(dataset + "/buildings.shp");
-//	shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
+	//shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
 	shape_file shape_nodes <- shape_file(dataset + "/nodes.shp");
 	shape_file shape_roads <- shape_file(dataset + "/roads.shp");
 	
@@ -48,16 +48,17 @@ global {
 	// Networks
 	graph road_network;
 	graph bicycle_network;
-		
+	
+	// Init the model
 	init {
-		create Event_Manager;
+		create EventManager;
 		
 		// Create roads from database
-		create Simple_Road_Model from: shape_roads with: [
+		create SimpleRoadModel from: shape_roads with: [
 			type::read("type"),
 			junction::read("junction"),
 			max_speed::float(read("maxspeed")),
-			nb_lanes::int(read("lanes")),
+			lanes::int(read("lanes")),
 			oneway::read("oneway"),
 			foot::read("foot"),
 			bicycle::read("bicycle"),
@@ -68,8 +69,7 @@ global {
 			cycleway::read("cycleway")
 		];
 		
-		
-		// Create nodes
+		// Create nodes TODO use OSM data ?
 		create Crossroad from: shape_nodes;
 
 		// Create buildings from database
@@ -84,7 +84,7 @@ global {
 //			home_place::one_of(Building where (each.id = read("home_pl")))
 //		];
 		
-		// Get networks from roads definitions		
+		// Get networks from definitions		
 		road_network <- directed(as_edge_graph(roads 
 			where ((car_definition["type"] contains each.type) 
 				or (car_definition["access"] contains each.access)), 
@@ -98,41 +98,18 @@ global {
 			),
 	 	Crossroad));
 	 	
+	 	// Setup Roads
 	 	ask roads {
-			start_node <- Crossroad(first(self.shape.points));
-			end_node <- Crossroad(last(self.shape.points));
-			
-			//don't know why some roads have a nil start...
-			if (start_node = nil or end_node = nil) {
-	//			do die;
-			}
-
-			point A <- start_node.location;
-			point B <- end_node.location;
-			if (A = B) {
-				trans <- {0, 0};
-			} else {
-				point u <- {-(B.y - A.y) / (B.x - A.x), 1};
-				float angle <- angle_between(A, B, A + u);
-				// write sample(int(angle));
-				// write sample(norm(u));
-				if (angle < 150) {
-					trans <- u / norm(u);
-				} else {
-					trans <- -u / norm(u);
-				}
-
-			}
-
+			do init start: Crossroad(first(self.shape.points)) end: Crossroad(last(self.shape.points));
 		}
 	}
 }
 
+// The main experiment
 experiment SwITCh type: gui {	
 	output {
 		display main_window type: opengl {	
-			species Road;
-			species Simple_Road_Model;
+			species SimpleRoadModel;
 			species Crossroad;
 			species Building;
 			species Individual;
