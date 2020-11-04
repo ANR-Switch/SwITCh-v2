@@ -21,4 +21,7 @@ species EventManager control: event_manager {
 	// Step                                 10m					(Event scheduled)
 	// 					     |-------------------------------------------|---------------->
 	bool allow_past <- true;
+	
+	// Use the smart method
+	bool naive <- false;
 }

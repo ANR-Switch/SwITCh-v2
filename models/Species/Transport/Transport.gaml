@@ -62,11 +62,13 @@ species Transport virtual: true skills: [scheduling] {
 		is_moving <- true;
 		path the_path <- path_between(available_graph, start_location, end_location);
 		if (the_path = nil) {
-			// Something wrong
+		// Something wrong
 			write "The path is nil so there is (maybe) a problem with the graph";
 			do end(start_time);
 		} else {
 			path_to_target <- list<Road>(the_path.edges);
+			do updateOwnPosition();
+			do updatePassengerPosition();
 			do later the_action: changeRoad at: start_time;
 		}
 
@@ -100,7 +102,7 @@ species Transport virtual: true skills: [scheduling] {
 		}
 
 	}
-	
+
 	// Update transport position
 	action updateOwnPosition {
 		location <- getCurrentRoad().start_node.location;
@@ -110,6 +112,12 @@ species Transport virtual: true skills: [scheduling] {
 	action updatePassengerPosition {
 		loop passenger over: passengers {
 			passenger.location <- location;
+		}
+
+		if passengers[0].name = "Individual98" {
+			write "Individual98";
+			write location;
+			write passengers[0].location;
 		}
 
 	}

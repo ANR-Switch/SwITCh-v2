@@ -39,7 +39,7 @@ species Walk parent: PrivateTransport {
 	}
 
 	action end (date arrived_time) {
-		do updateOwnPosition();
+		location <- getCurrentRoad().end_node.location;
 		do updatePassengerPosition();
 		loop passenger over: passengers {
 			ask passenger {
