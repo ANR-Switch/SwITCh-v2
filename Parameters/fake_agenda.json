@@ -1,0 +1,12 @@
+{
+    "metro_boulot_dodo": [
+        {
+            "starting_date" : 28800.0,
+            "activity_type" : 7
+        },
+        {
+            "starting_date" : 64800.0,
+            "activity_type" : 4
+        }
+    ] 
+}

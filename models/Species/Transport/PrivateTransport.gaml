@@ -14,7 +14,7 @@ import "Transport.gaml"
  */
 species PrivateTransport parent: Transport virtual: true {
 
-	// Still virtual
+	// Still virtual end travel
 	action end (date arrived_time) virtual: true;
 }
 

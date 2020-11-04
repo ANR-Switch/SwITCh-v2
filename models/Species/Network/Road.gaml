@@ -13,8 +13,8 @@ import "../Transport/Transport.gaml"
  * Road virtual species
  */
 species Road virtual: true {
-	
-	// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
+
+// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
 	string type;
 
 	// Is part of roundabout or not (OSM information)
@@ -22,7 +22,7 @@ species Road virtual: true {
 
 	// Maximum legal speed on this road
 	float max_speed;
-	
+
 	// Is the road is oneway or not
 	string oneway;
 
@@ -43,7 +43,7 @@ species Road virtual: true {
 
 	// Is used to give information about footways
 	string sidewalk;
-	
+
 	// Number of motorized vehicule lane in this road
 	int lanes;
 
@@ -70,18 +70,12 @@ species Road virtual: true {
 
 	// Virtual leave the road
 	action leave (Transport t, date request_time) virtual: true;
-	
-	// Init the road
-	action init(Crossroad start, Crossroad end) {
-		// Set start and end crossroads
-		start_node <- start;
-		end_node <- end;
-		
-		// Don't know why some roads have a nil start...
-		if (start_node = nil or end_node = nil) {
-			//do die;
-		}
 
+	// Init the road
+	init {
+		// Set start and end crossroads
+		start_node <- Crossroad(first(self.shape.points));
+		end_node <- Crossroad(last(self.shape.points));
 		point A <- start_node.location;
 		point B <- end_node.location;
 		if (A = B) {
@@ -89,8 +83,6 @@ species Road virtual: true {
 		} else {
 			point u <- {-(B.y - A.y) / (B.x - A.x), 1};
 			float angle <- angle_between(A, B, A + u);
-			// write sample(int(angle));
-			// write sample(norm(u));
 			if (angle < 150) {
 				trans <- u / norm(u);
 			} else {
@@ -98,17 +90,18 @@ species Road virtual: true {
 			}
 
 		}
-}
+
+	}
 
 	// Get size
 	float getSize {
 		return shape.perimeter;
 	}
 
-	// Get free flow travel time (time to cross the road when the speed of the transport is equals to the maximum speed)
-	date getFreeFlowTravelTime (Transport t) {
+	// Get free flow travel time in secondes (time to cross the road when the speed of the transport is equals to the maximum speed)
+	float getFreeFlowTravelTime (Transport t) {
 		float max_freeflow_speed <- min([t.max_speed, max_speed]) #km / #h;
-		return date("now") + (getSize() / max_freeflow_speed);
+		return getSize() / max_freeflow_speed;
 	}
 
 	// True if this road has capacity
@@ -119,7 +112,7 @@ species Road virtual: true {
 	// Default aspect
 	aspect default {
 		geometry geom_display <- (shape + lanes);
-		draw geom_display translated_by (trans * 2) border: #gray color: rgb(255 * (max_capacity - current_capacity) / max_capacity, 0, 0);
+		draw geom_display translated_by (trans * 2) border: #gray color: rgb(255 * ((max_capacity - current_capacity) / max_capacity), 0, 0);
 	}
 
 }

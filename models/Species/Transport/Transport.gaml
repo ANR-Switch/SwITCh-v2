@@ -17,7 +17,7 @@ import "../Individual/Individual.gaml"
  */
 species Transport virtual: true skills: [scheduling] {
 
-	// The event manager
+// The event manager
 	agent event_manager <- EventManager[0];
 
 	// List of roads that lead to the target
@@ -43,7 +43,7 @@ species Transport virtual: true skills: [scheduling] {
 
 	// Passenger get in the transport
 	bool getIn (Individual i) {
-		// Can't be more than the max capacity
+	// Can't be more than the max capacity
 		if (length(passengers) < max_passenger) {
 			add item: i to: passengers;
 			return true;
@@ -62,12 +62,12 @@ species Transport virtual: true skills: [scheduling] {
 		is_moving <- true;
 		path the_path <- path_between(available_graph, start_location, end_location);
 		if (the_path = nil) {
-			// TODO ???????????????????????????????????????????
-			write "PATH NIL //// TELEPORTATION ACTIVEEE !!!!!!";
+			// Something wrong
+			write "The path is nil so there is (maybe) a problem with the graph";
 			do end(start_time);
 		} else {
 			path_to_target <- list<Road>(the_path.edges);
-			do changeRoad(start_time);
+			do later the_action: changeRoad at: start_time;
 		}
 
 	}
@@ -75,36 +75,41 @@ species Transport virtual: true skills: [scheduling] {
 	// Virtual end travel
 	action end (date arrived_time) virtual: true;
 
-	// Change road
-	action changeRoad (date signal_time) {
-		// Leave the current road
+	// Change road signal
+	action changeRoad {
+	// Leave the current road
 		if is_moving and hasNextRoad() {
 			ask getCurrentRoad() {
-				do leave(myself, signal_time);
+				do leave(myself, myself.event_date);
 			}
 
-			is_moving <- true;
 			remove first(path_to_target) from: path_to_target;
 
 			// Join the next road
 			if hasNextRoad() {
+				do updateOwnPosition();
 				do updatePassengerPosition();
 				ask getCurrentRoad() {
-					do join(myself, signal_time);
+					do join(myself, myself.event_date);
 				}
 
 			} else {
-				do end(signal_time);
+				do end(event_date);
 			}
 
 		}
 
 	}
+	
+	// Update transport position
+	action updateOwnPosition {
+		location <- getCurrentRoad().start_node.location;
+	}
 
 	// For each 'changeRoad' we must redefine the position of all passengers
 	action updatePassengerPosition {
 		loop passenger over: passengers {
-			passenger.location <- getCurrentRoad().start_node.location;
+			passenger.location <- location;
 		}
 
 	}

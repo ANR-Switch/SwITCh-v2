@@ -6,6 +6,7 @@
 */
 model SwITCh
 
+import "Individual.gaml"
 import "Activity.gaml"
 
 /** 
@@ -14,10 +15,10 @@ import "Activity.gaml"
 global {
 	// Create a new agenda
 	Agenda createAgenda {
-		create Agenda returns: children {
+		create Agenda returns: agendas {
 		}
 
-		return children[0];
+		return agendas[0];
 	}
 
 }
@@ -28,10 +29,14 @@ global {
 species Agenda {
 	// The list of activities
 	list<Activity> agenda <- [];
+	
+	// Add a new activity and schedule it
+	action addActivity (Activity activity, Individual individual) {
+		add activity to: agenda;
+		ask activity {
+			do schedule individual: individual;
+		}
 
-	// Add a new activity
-	action addActivity (Activity a) {
-		add a to: agenda;
 	}
 
 }
