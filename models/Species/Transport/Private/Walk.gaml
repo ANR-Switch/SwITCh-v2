@@ -39,8 +39,6 @@ species Walk parent: PrivateTransport {
 	}
 
 	action end (date arrived_time) {
-		location <- getCurrentRoad().end_node.location;
-		do updatePassengerPosition();
 		loop passenger over: passengers {
 			ask passenger {
 				do executeTripChain(arrived_time);

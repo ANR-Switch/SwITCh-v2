@@ -40,22 +40,19 @@ species Trip {
 
 	// Start the trip
 	action start (point position, date start_time) {
-		// Set the current target of the individual
+	// Set the current target of the individual
 		ask individual {
 			current_target <- myself.target;
 		}
-		
+
 		// Ask the transport to add this individual;
 		ask transport {
 			do getIn(myself.individual);
 		}
 
 		// And start moving
-		if (not transport.is_moving) {
-			ask transport {
-				do start(position, myself.target, start_time);
-			}
-
+		ask transport {
+			do start(position, myself.target, start_time);
 		}
 
 	}

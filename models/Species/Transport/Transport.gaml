@@ -38,9 +38,6 @@ species Transport virtual: true skills: [scheduling] {
 	// Passenger capacity 
 	int max_passenger;
 
-	// True if is moving
-	bool is_moving <- false;
-
 	// Passenger get in the transport
 	bool getIn (Individual i) {
 	// Can't be more than the max capacity
@@ -59,7 +56,6 @@ species Transport virtual: true skills: [scheduling] {
 
 	// Start to move
 	action start (point start_location, point end_location, date start_time) {
-		is_moving <- true;
 		path the_path <- path_between(available_graph, start_location, end_location);
 		if (the_path = nil) {
 		// Something wrong
@@ -80,25 +76,22 @@ species Transport virtual: true skills: [scheduling] {
 	// Change road signal
 	action changeRoad {
 	// Leave the current road
-		if is_moving and hasNextRoad() {
+		ask getCurrentRoad() {
+			do leave(myself, myself.event_date);
+		}
+
+		remove first(path_to_target) from: path_to_target;
+
+		// Join the next road
+		if hasNextRoad() {
+			do updateOwnPosition();
+			do updatePassengerPosition();
 			ask getCurrentRoad() {
-				do leave(myself, myself.event_date);
+				do join(myself, myself.event_date);
 			}
 
-			remove first(path_to_target) from: path_to_target;
-
-			// Join the next road
-			if hasNextRoad() {
-				do updateOwnPosition();
-				do updatePassengerPosition();
-				ask getCurrentRoad() {
-					do join(myself, myself.event_date);
-				}
-
-			} else {
-				do end(event_date);
-			}
-
+		} else {
+			do end(event_date);
 		}
 
 	}
@@ -112,12 +105,6 @@ species Transport virtual: true skills: [scheduling] {
 	action updatePassengerPosition {
 		loop passenger over: passengers {
 			passenger.location <- location;
-		}
-
-		if passengers[0].name = "Individual98" {
-			write "Individual98";
-			write location;
-			write passengers[0].location;
 		}
 
 	}
