@@ -36,6 +36,10 @@ global {
 	shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
 	shape_file shape_nodes <- shape_file(dataset + "/nodes.shp");
 	shape_file shape_roads <- shape_file(dataset + "/roads.shp");
+	
+	// Graph configuration
+	string optimizer_type <- "NBAStar" among: ["NBAStar", "NBAStarApprox", "Dijkstra", "AStar", "BellmannFord", "FloydWarshall"];
+	bool memorize_shortest_paths <- true; //true by default
 
 	// TODO : to review : init value when all agents created or a  function ?  s
 	list<Road> roads -> {agents of_generic_species Road};
@@ -67,6 +71,12 @@ global {
 
 		// Get networks from definitions		
 		full_network <- directed(as_edge_graph(roads, Crossroad));
+		
+		//allows to choose the type of algorithm to use compute the shortest paths
+		full_network <- full_network with_optimizer_type optimizer_type;
+
+		//allows to define if the shortest paths computed should be memorized (in a cache) or not
+		full_network <- full_network use_cache memorize_shortest_paths;
 
 		// ############################ WIP IN PROGRESS TEST WARNING WARNING 
 		// Setup Individuals
