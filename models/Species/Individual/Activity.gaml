@@ -52,12 +52,12 @@ species Activity {
 		ask individual {
 			switch myself.getActivityTypeString() {
 				match "familly" {
-					do later the_action: familly at: myself.starting_time;
+					do later the_action: familly at: myself.starting_time refer_to: myself;
 				}
 
 				match "work" {
-					do later the_action: work at: myself.starting_time;
-				} 
+					do later the_action: work at: myself.starting_time refer_to: myself;
+				}
 
 			}
 

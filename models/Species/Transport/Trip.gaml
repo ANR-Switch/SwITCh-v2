@@ -41,7 +41,7 @@ species Trip {
 
 	// Destination
 	point target;
-
+	
 	// Start the trip
 	action start (point position, date start_time) {
 		// Set the current target of the individual

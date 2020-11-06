@@ -41,5 +41,14 @@ species SimpleRoadModel parent: Road {
 			myself.current_capacity <- myself.current_capacity + size;
 		}
 	}
-
+	
+	// Implement of getEntryPoint
+	point getEntryPoint {
+		return start_node.location;
+	}
+	
+	// Implement of getExitPoint
+	point getExitPoint {
+		return end_node.location;
+	}
 }

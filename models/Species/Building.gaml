@@ -27,15 +27,15 @@ global {
 species Building {
 	// Building ID
 	int id;
-	
+
 	// Type
 	string type <- blg_type_default;
 	
-	// Subarea (if the world is composed of several areas)
-	string sub_area;
-	
 	// List of types (primary and others)
 	list<string> types <- [];
+
+	// Subarea (if the world is composed of several areas)
+	string sub_area;
 	
 	// Number of households in the building
 	int nb_households <- 1;

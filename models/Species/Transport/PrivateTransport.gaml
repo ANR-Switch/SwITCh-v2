@@ -18,9 +18,6 @@ species PrivateTransport parent: Transport virtual: true {
 	action end (date arrived_time) {
 		is_visible <- false;
 		
-		do updateOwnPositionEnd();
-		do updatePassengerPosition();
-		
 		loop passenger over: passengers {
 			ask passenger {
 				do executeTripChain(arrived_time);
@@ -28,6 +25,7 @@ species PrivateTransport parent: Transport virtual: true {
 
 		}
 
+		// "getOut" is not necessary because -> die
 		do die;
 	}
 

@@ -20,7 +20,6 @@ global {
 
 		return cars[0];
 	}
-
 }
 
 /** 

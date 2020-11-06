@@ -20,7 +20,7 @@ import "Species/Transport/Private/Walk.gaml"
  */
 global {
 
-// Starting date of the simulation 
+	// Starting date of the simulation 
 	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
 	float step <- 0.5 #minute;
 
@@ -63,7 +63,7 @@ global {
 		[type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")];
 
 		// Create buildings from database (must be defined before individuals in order to build the individual with home place and working place)
-		create Building from: shape_buildings with: [id::int(read("id")), type:: read("type")];
+		create Building from: shape_buildings with: [id::int(read("id")), type::read("type")];
 
 		// Create individuals from database 
 		create Individual from: shape_individuals with: [working_place::one_of(Building where (each.id = read("work_pl"))), home_place::one_of(Building where

@@ -14,7 +14,7 @@ import "../Transport/Transport.gaml"
  */
 species Road virtual: true {
 
-// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
+	// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
 	string type;
 
 	// Is part of roundabout or not (OSM information)
@@ -70,12 +70,20 @@ species Road virtual: true {
 
 	// Virtual leave the road
 	action leave (Transport t, date request_time) virtual: true;
-
+	
+	// Get entry point in the road
+	point getEntryPoint virtual: true;
+	
+	// Get exit point in the road
+	point getExitPoint virtual: true;
+	
 	// Init the road
 	init {
 		// Set start and end crossroads
 		start_node <- Crossroad(first(self.shape.points));
 		end_node <- Crossroad(last(self.shape.points));
+		
+		// Get translations (in order to draw two roads if there is two directions)
 		point A <- start_node.location;
 		point B <- end_node.location;
 		if (A = B) {
