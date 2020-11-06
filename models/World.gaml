@@ -123,7 +123,7 @@ global {
 }
 
 // The main experiment
-experiment SwITCh type: gui {
+experiment "SwITCh" type: gui {
 	output {
 		display main_window type: opengl {
 			species SimpleRoadModel;
