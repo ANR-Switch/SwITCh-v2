@@ -17,7 +17,7 @@ import "../Individual/Individual.gaml"
  */
 species Transport virtual: true skills: [scheduling] {
 
-// The event manager
+	// The event manager
 	agent event_manager <- EventManager[0];
 
 	// List of roads that lead to the target
@@ -43,10 +43,13 @@ species Transport virtual: true skills: [scheduling] {
 	
 	// If true path is nil
 	bool path_nil <- false;
+	
+	// If true the transport is visible
+	bool is_visible <- false;
 
 	// Passenger get in the transport
 	bool getIn (Individual i) {
-	// Can't be more than the max capacity
+		// Can't be more than the max capacity
 		if (length(passengers) < max_passenger) {
 			add item: i to: passengers;
 			return true;
@@ -83,6 +86,7 @@ species Transport virtual: true skills: [scheduling] {
 
 	// Start to move
 	action start (point start_location, point end_location, date start_time) {
+		is_visible <- true;
 		if not computed {
 			do compute(start_location, end_location);
 		} 

@@ -16,6 +16,8 @@ species PrivateTransport parent: Transport virtual: true {
 
 	// Implementation of end
 	action end (date arrived_time) {
+		is_visible <- false;
+		
 		do updateOwnPositionEnd();
 		do updatePassengerPosition();
 		

@@ -39,7 +39,9 @@ species Walk parent: PrivateTransport {
 
 
 	aspect default {
-		draw square(6) color: #green border: #black;
+		if is_visible {	
+			draw square(6) color: #green border: #black;
+		}
 	}
 
 }

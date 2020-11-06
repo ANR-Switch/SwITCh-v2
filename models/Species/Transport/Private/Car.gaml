@@ -29,7 +29,6 @@ global {
  * Implement PrivateTransport (and Transport) species
  */
 species Car parent: PrivateTransport {
-	bool displayed <- true;
 
 	// Init speed, size and capacity
 	init {
@@ -41,7 +40,7 @@ species Car parent: PrivateTransport {
 
 	// Default aspect
 	aspect default {
-		if displayed {
+		if is_visible {
 			draw square(6) color: #brown border: #black;
 		}
 

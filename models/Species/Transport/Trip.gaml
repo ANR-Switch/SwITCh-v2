@@ -19,6 +19,11 @@ global {
 			individual <- tripIndividual;
 			target <- tripTarget;
 		}
+		
+		// Set the position of the transport at the same location of the individual
+		ask tripTransport {
+			location <- tripIndividual.location;
+		}
 
 		return trips[0];
 	}

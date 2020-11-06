@@ -7,6 +7,8 @@
 model SwITCh
 
 import "../Transport/Private/Walk.gaml"
+import "../Transport/Private/Car.gaml"
+import "../Transport/Private/Bike.gaml"
 import "../Transport/Trip.gaml"
 import "../Building.gaml"
 import "Agenda.gaml"
@@ -169,7 +171,7 @@ species Individual skills: [scheduling] {
 
 	// Compute transport trip
  	action computeTransportTrip (Building building) {
-		do pushTrip(world.createTrip(world.createWalk(), self, any_location_in(building.shape)));		
+		do pushTrip(world.createTrip(world.createBike(), self, any_location_in(building.shape)));		
 	}
 	
 
