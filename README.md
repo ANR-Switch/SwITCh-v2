@@ -1,6 +1,14 @@
 # SwITCh-v2
 New version of SwITCh simulation.
 
+# Files
+ - Models folder contains all models
+ - Parameters folder contains all inputs data (json files)
+    - Config.json: dataset location
+    - Agendas.json: fake agendas
+    - OSM road types.json: data about networks 
+    - Building type per activity type.json: biding OSM building tags to SwITCh tags
+
 # Coding conventions
  - Action and parameter
  ```gaml 
