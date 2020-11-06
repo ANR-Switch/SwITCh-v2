@@ -91,7 +91,8 @@ global {
 			ask Individual {
 				int random <- rnd(0, 100);
 				if (random <= 85) {
-					//car <- world.createCar();
+					has_car <- true;
+					has_bike <- true;
 				}
 
 				do addActivity activity: a;

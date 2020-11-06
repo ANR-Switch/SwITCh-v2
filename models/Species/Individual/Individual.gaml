@@ -97,9 +97,38 @@ species Individual skills: [scheduling] {
 	 * Trip actions
 	 */
 	 
- 	// Create transport trip
+ 	// Create transport trip TODO distance is arbitrary, we must define a better strategy
 	action computeTripChain (Building building) {
-		do pushTrip(world.createTrip(world.createBike(), self, any_location_in(building.shape)));
+		point target <- any_location_in(building.shape);
+		float distance <- location distance_to target; // TODO must be distance in the graph 
+		Transport transport <- nil;
+				
+		if not has_car and not has_bike {
+			transport <- world.createWalk();
+		} else if has_car and not has_bike {
+			if distance > 0.5#km {
+				transport <- world.createCar();
+			} else {
+				transport <- world.createWalk();
+			}
+			
+		} else if not has_car and has_bike {
+			if distance > 0.5#km {
+				transport <- world.createBike();
+			} else {
+				transport <- world.createWalk();
+			}
+		} else if has_car and  has_bike {
+			if distance > 1.0#km {
+				transport <- world.createCar();
+			} else if distance > 0.5#km {
+				transport <- world.createBike();
+			} else {
+				transport <- world.createWalk();
+			}
+		}
+		
+		do pushTrip(world.createTrip(transport, self, target));
 	}
 	
 	// Execute one trip of the chain
