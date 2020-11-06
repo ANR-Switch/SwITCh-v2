@@ -14,7 +14,7 @@ import "../PrivateTransport.gaml"
  */
 global {
 	// Create a new walk
-	Walk createWalk {
+	Walk create_walk {
 		create Walk returns: walks {
 		}
 

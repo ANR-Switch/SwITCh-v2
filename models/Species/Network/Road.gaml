@@ -66,16 +66,16 @@ species Road virtual: true {
 	float current_capacity <- max_capacity min: 0.0 max: max_capacity;
 
 	// Virtual join the road
-	action join (Transport t, date request_time) virtual: true;
+	action join (Transport transport, date request_time) virtual: true;
 
 	// Virtual leave the road
-	action leave (Transport t, date request_time) virtual: true;
+	action leave (Transport transport, date request_time) virtual: true;
 	
 	// Get entry point in the road
-	point getEntryPoint virtual: true;
+	point get_entry_point virtual: true;
 	
 	// Get exit point in the road
-	point getExitPoint virtual: true;
+	point get_exit_point virtual: true;
 	
 	// Init the road
 	init {
@@ -102,18 +102,18 @@ species Road virtual: true {
 	}
 
 	// Get size
-	float getSize {
+	float get_size {
 		return shape.perimeter;
 	}
 
 	// Get free flow travel time in secondes (time to cross the road when the speed of the transport is equals to the maximum speed)
-	float getFreeFlowTravelTime (Transport t) {
-		float max_freeflow_speed <- min([t.max_speed, max_speed]) #km / #h;
-		return getSize() / max_freeflow_speed;
+	float get_free_flow_travel_time (Transport transport) {
+		float max_freeflow_speed <- min([transport.max_speed, max_speed]) #km / #h;
+		return get_size() / max_freeflow_speed;
 	}
 
 	// True if this road has capacity
-	bool hasCapacity (float capacity) {
+	bool has_capacity (float capacity) {
 		return current_capacity > capacity;
 	}
 

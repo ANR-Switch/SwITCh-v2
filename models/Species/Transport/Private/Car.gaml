@@ -14,7 +14,7 @@ import "../PrivateTransport.gaml"
  */
 global {
 	// Create a new car
-	Car createCar {
+	Car create_car {
 		create Car returns: cars {
 		}
 

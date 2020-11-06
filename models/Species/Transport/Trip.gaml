@@ -13,16 +13,16 @@ import "Transport.gaml"
  */
 global {
 	// Create a new trip
-	Trip createTrip (Transport tripTransport, Individual tripIndividual, point tripTarget) {
+	Trip create_trip (Transport trip_transport, Individual trip_individual, point trip_target) {
 		create Trip returns: trips {
-			transport <- tripTransport;
-			individual <- tripIndividual;
-			target <- tripTarget;
+			transport <- trip_transport;
+			individual <- trip_individual;
+			target <- trip_target;
 		}
 		
 		// Set the position of the transport at the same location of the individual
-		ask tripTransport {
-			location <- tripIndividual.location;
+		ask trip_transport {
+			location <- trip_individual.location;
 		}
 
 		return trips[0];
@@ -51,17 +51,17 @@ species Trip {
 
 		ask transport {
 			// Ask the transport to add this individual;
-			do getIn(myself.individual);
+			do get_in(myself.individual);
 			// And start moving
 			do start(position, myself.target, start_time);
 		}
 	}
 	
 	// Start the trip
-	point preCompute (point position) {
+	point pre_compute (point position) {
 		ask transport {
 			// PreCompute
-			return preCompute(position, myself.target);
+			return pre_compute(position, myself.target);
 		}
 	}
 }

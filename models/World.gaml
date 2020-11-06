@@ -6,7 +6,7 @@
 */
 model SwITCh
 
-import "Utilities/EventManager.gaml"
+import "Utilities/Scheduler.gaml"
 import "Species/Network/RoadModels/SimpleRoadModel.gaml"
 import "Species/Individual/Individual.gaml"
 import "Species/Building.gaml"
@@ -25,7 +25,7 @@ global {
 	float step <- 0.5 #minute;
 
 	// Get general configuration
-	file config <- json_file("../utilities/Config.json");
+	file config <- json_file("../Parameters/Config.json");
 	map<string, unknown> config_data <- config.contents;
 
 	// Get configs data
@@ -41,7 +41,7 @@ global {
 	string optimizer_type <- "NBAStar" among: ["NBAStar", "NBAStarApprox", "Dijkstra", "AStar", "BellmannFord", "FloydWarshall"];
 	bool memorize_shortest_paths <- true; //true by default
 
-	// TODO : to review : init value when all agents created or a  function ?  s
+	// TODO : to review : init value when all agents created or a function ?
 	list<Road> roads -> {agents of_generic_species Road};
 
 	// Change the geometry of the world
@@ -80,14 +80,14 @@ global {
 
 		// ############################ WIP IN PROGRESS TEST WARNING WARNING 
 		// Setup Individuals
-		file fake_agenda_json <- json_file("../Parameters/fake_agenda.json");
+		file fake_agenda_json <- json_file("../Parameters/Agendas.json");
 		map<string, list<map<string, unknown>>> fake_agenda_data <- fake_agenda_json.contents;
 		loop activity over: list<map<string, unknown>>(fake_agenda_data["metro_boulot_dodo"]) {
 			date act_starting_time <- starting_date + int(activity["starting_date"]);
 			int act_type <- int(activity["activity_type"]);
 
 			// Add activity to all individuals
-			Activity a <- createActivity(act_starting_time, act_type);
+			Activity a <- create_activity(act_starting_time, act_type);
 			ask Individual {
 				int random <- rnd(0, 100);
 				if (random <= 85) {
@@ -95,7 +95,7 @@ global {
 					has_bike <- true;
 				}
 
-				do addActivity activity: a;
+				do add_activity activity: a;
 				if home_place = nil and age >= 18 {
 					home_place <- one_of(Building where (each.type = "staying_home"));
 				} else if home_place = nil and age < 18 {

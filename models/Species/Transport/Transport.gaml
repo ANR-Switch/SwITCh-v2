@@ -6,7 +6,7 @@
 */
 model SwITCh
 
-import "../../Utilities/EventManager.gaml"
+import "../../Utilities/Scheduler.gaml"
 import "../Network/Road.gaml"
 import "../Individual/Individual.gaml"
 
@@ -72,11 +72,11 @@ species Transport virtual: true skills: [scheduling] {
 	}
 
 	// Pre compute path and return entry point
-	point preCompute(point start_location, point end_location) {
+	point pre_compute(point start_location, point end_location) {
 		do compute(start_location, end_location);
 		if (computed and not path_nil) {
-			ask getCurrentRoad() {
-				return getEntryPoint();
+			ask get_current_road() {
+				return get_entry_point();
 			}
 		}
 		return nil;
@@ -87,7 +87,7 @@ species Transport virtual: true skills: [scheduling] {
 	 */
 	
 	// Passenger get in the transport
-	bool getIn (Individual i) {
+	bool get_in (Individual i) {
 		// Can't be more than the max capacity
 		if (length(passengers) < max_passenger) {
 			add item: i to: passengers;
@@ -98,7 +98,7 @@ species Transport virtual: true skills: [scheduling] {
 	}
 
 	// Passenger get out the transport
-	action getOut (Individual i) {
+	action get_out (Individual i) {
 		remove item: i from: passengers;
 	}
 	
@@ -118,8 +118,8 @@ species Transport virtual: true skills: [scheduling] {
 			write "The path is nil so there is (maybe) a problem with the graph";
 			do end(start_time);
 		} else {
-			do updatePositions(getCurrentRoad().getEntryPoint());
-			do later the_action: changeRoad at: start_time;
+			do update_positions(get_current_road().get_entry_point());
+			do later the_action: change_road at: start_time;
 		}
 
 	}
@@ -133,10 +133,10 @@ species Transport virtual: true skills: [scheduling] {
 	 */
 
 	// Redefine the position of all passengers and the transport itself
-	action updatePositions(point newLocation) {
-		location <- newLocation;
+	action update_positions(point new_location) {
+		location <- new_location;
 		loop passenger over: passengers {
-			passenger.location <- newLocation;
+			passenger.location <- new_location;
 		}
 
 	}
@@ -146,12 +146,12 @@ species Transport virtual: true skills: [scheduling] {
 	 */
 
 	// Check if there is a next road
-	bool hasNextRoad {
+	bool has_next_road {
 		return length(path_to_target) > 1;
 	}
 
 	// Get current road of this transport
-	Road getCurrentRoad {
+	Road get_current_road {
 		if length(path_to_target) > 0 {
 			return first(path_to_target);
 		} else {
@@ -161,9 +161,9 @@ species Transport virtual: true skills: [scheduling] {
 	}
 	
 	// Change road signal
-	action changeRoad {
+	action change_road {
 		// Leave the current road
-		Road r <- getCurrentRoad();
+		Road r <- get_current_road();
 		if r != nil {
 			ask r {
 				do leave(myself, myself.event_date);
@@ -174,14 +174,14 @@ species Transport virtual: true skills: [scheduling] {
 		remove first(path_to_target) from: path_to_target;
 
 		// Join the next road
-		if hasNextRoad() {
-			do updatePositions(getCurrentRoad().getEntryPoint());
-			ask getCurrentRoad() {
+		if has_next_road() {
+			do update_positions(get_current_road().get_entry_point());
+			ask get_current_road() {
 				do join(myself, myself.event_date);
 			}
 
 		} else {
-			do updatePositions(r.getExitPoint());
+			do update_positions(r.get_exit_point());
 			do end(event_date);
 		}
 

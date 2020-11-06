@@ -14,7 +14,7 @@ import "Activity.gaml"
  */
 global {
 	// Create a new agenda
-	Agenda createAgenda {
+	Agenda create_agenda {
 		create Agenda returns: agendas {
 		}
 
@@ -31,7 +31,7 @@ species Agenda {
 	list<Activity> agenda <- [];
 	
 	// Add a new activity and schedule it
-	action addActivity (Activity activity, Individual individual) {
+	action add_activity (Activity activity, Individual individual) {
 		add activity to: agenda;
 		ask activity {
 			do schedule individual: individual;

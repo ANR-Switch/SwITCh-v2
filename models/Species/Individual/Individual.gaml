@@ -32,7 +32,7 @@ species Individual skills: [scheduling] {
 	bool has_bike <- false;
 	
 	// The agenda
-	Agenda my_agenda <- world.createAgenda();
+	Agenda my_agenda <- world.create_agenda();
 	
 	// The working place
 	Building working_place <- nil;
@@ -74,22 +74,22 @@ species Individual skills: [scheduling] {
 	 */
 	 
 	// Add trip
-	action pushTrip (Trip trip) {
+	action push_trip (Trip trip) {
 		push item: trip to: trip_chain;
 	}
 	
 	// Get and remove next trip
-	Trip popTrip {
+	Trip pop_trip {
 		return pop(trip_chain);
 	}
 	
 	// Get and remove next trip
-	Trip firstTrip {
+	Trip first_trip {
 		return first(trip_chain);
 	}
 	
 	// True if there is trips
-	bool hasTrip {
+	bool has_trip {
 		return length(trip_chain) > 0;
 	}
 	
@@ -98,41 +98,41 @@ species Individual skills: [scheduling] {
 	 */
 	 
  	// Create transport trip TODO distance is arbitrary, we must define a better strategy
-	action computeTripChain (Building building) {
-		point target <- any_location_in(building.shape);
+	action compute_trip_chain (Building target_building) {
+		point target <- any_location_in(target_building.shape);
 		float distance <- location distance_to target; // TODO must be distance in the graph 
 		Transport transport <- nil;
 				
 		if not has_car and not has_bike {
-			transport <- world.createWalk();
+			transport <- world.create_walk();
 		} else if has_car and not has_bike {
 			if distance > 0.5#km {
-				transport <- world.createCar();
+				transport <- world.create_car();
 			} else {
-				transport <- world.createWalk();
+				transport <- world.create_walk();
 			}
 			
 		} else if not has_car and has_bike {
 			if distance > 0.5#km {
-				transport <- world.createBike();
+				transport <- world.create_bike();
 			} else {
-				transport <- world.createWalk();
+				transport <- world.create_walk();
 			}
 		} else if has_car and  has_bike {
 			if distance > 1.0#km {
-				transport <- world.createCar();
+				transport <- world.create_car();
 			} else if distance > 0.5#km {
-				transport <- world.createBike();
+				transport <- world.create_bike();
 			} else {
-				transport <- world.createWalk();
+				transport <- world.create_walk();
 			}
 		}
 		
-		do pushTrip(world.createTrip(transport, self, target));
+		do push_trip(world.create_trip(transport, self, target));
 	}
 	
 	// Execute one trip of the chain
-	action executeTripChain (date start_time) {
+	action execute_trip_chain (date start_time) {
 		// If this is not the first trip then kill it
 		if current_trip != nil {
 			ask current_trip {
@@ -142,43 +142,43 @@ species Individual skills: [scheduling] {
 		}
 
 		// Check if there is another trip 
-		if hasTrip() {
+		if has_trip() {
 			// If initialized then normal behavior
 			if initialized_joining_activity {
-				do startTrip(start_time);
+				do start_trip(start_time);
 			} else {
 				// Pre compute and get entry location
-				ask firstTrip() {
-					myself.current_target <- preCompute(myself.location);
+				ask first_trip() {
+					myself.current_target <- pre_compute(myself.location);
 				}
 
 				// If the trip entry point is nil it's not normal behavior.
 				if current_target = nil {
 					// Something wrong: impossible to enter into the graph 
 					// Execute the trip as usual
-					do startTrip(start_time);
+					do start_trip(start_time);
 				} else {
 					// Set init false;	
 					initialized_joining_activity <- true;
 
 					// Entry network					
-					date entry_date <- computeWalkStraightForwardAccessTime(start_time, current_target);
-					do later the_action: entryNetwork at: entry_date;
+					date entry_date <- compute_walk_straight_forward_access_time(start_time, current_target);
+					do later the_action: entry_network at: entry_date;
 				}
 
 			}
 
 		} else {
 			// Exit network
-			date exit_date <- computeWalkStraightForwardAccessTime(start_time, current_target);
-			do later the_action: exitNetwork at: exit_date;
+			date exit_date <- compute_walk_straight_forward_access_time(start_time, current_target);
+			do later the_action: exit_network at: exit_date;
 		}
 
 	}
 	
 	// Start trip
-	action startTrip (date start_time) {
-		current_trip <- popTrip();
+	action start_trip (date start_time) {
+		current_trip <- pop_trip();
 		current_transport <- current_trip.transport;
 		ask current_trip {
 			do start(myself.location, start_time);
@@ -191,15 +191,15 @@ species Individual skills: [scheduling] {
 	 */
 	 
 	// Add activity in agenda
- 	action addActivity (Activity activity) {
+ 	action add_activity (Activity activity) {
 		ask my_agenda {
-			do addActivity activity: activity individual: myself;
+			do add_activity activity: activity individual: myself;
 		}
 
 	}
 	
 	// Compute activity
- 	action computeActivity (Activity activity, Building target, date start_date) {
+ 	action compute_activity (Activity activity, Building target, date start_date) {
 		// Set current activity
 		current_activity <- activity;
 
@@ -207,8 +207,8 @@ species Individual skills: [scheduling] {
 		initialized_joining_activity <- false;
 	
 		// Compute and execute trip chain
-		do computeTripChain(target);
-		do executeTripChain(start_date);
+		do compute_trip_chain(target);
+		do execute_trip_chain(start_date);
 	}
 
 	/**
@@ -216,9 +216,9 @@ species Individual skills: [scheduling] {
 	 */
 	 
 	// Compute entry/exit time
-	action computeWalkStraightForwardAccessTime(date start_time, point target) {
+	action compute_walk_straight_forward_access_time(date start_time, point target) {
 		// Create walk transport
-	 	current_transport <- world.createWalk();
+	 	current_transport <- world.create_walk();
 	 	
 	 	// Convert max speed in km/h to m/s
 		float mPerS <- current_transport.max_speed / 3.6; // km/h to m/s
@@ -234,7 +234,7 @@ species Individual skills: [scheduling] {
 	}
 	 
 	// Entry network
-	action entryNetwork {
+	action entry_network {
 		// End entry transport
 		ask current_transport {
 			do end(event_date);
@@ -247,11 +247,11 @@ species Individual skills: [scheduling] {
 		current_target <- nil;
 				
 		// Execute the trip chain
-		do executeTripChain(event_date);
+		do execute_trip_chain(event_date);
 	}
 	
 	// Exit network
-	action exitNetwork {
+	action exit_network {
 		// End exit transport
 		ask current_transport {
 			do end(event_date);
@@ -276,7 +276,7 @@ species Individual skills: [scheduling] {
 	action work {
 		// Check if the individual is not already in the building
 		if working_place != nil and not (working_place.shape overlaps location) {
-			do computeActivity(refer_to as Activity, working_place, event_date);
+			do compute_activity(refer_to as Activity, working_place, event_date);
 		}
 
 	}
@@ -285,7 +285,7 @@ species Individual skills: [scheduling] {
 	action familly {
 		// Check if the individual is not already in the building
 		if home_place != nil and not (home_place.shape overlaps location) {
-			do computeActivity(refer_to as Activity, home_place, event_date);
+			do compute_activity(refer_to as Activity, home_place, event_date);
 		}
 
 	}

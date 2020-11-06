@@ -20,7 +20,7 @@ species PrivateTransport parent: Transport virtual: true {
 		
 		loop passenger over: passengers {
 			ask passenger {
-				do executeTripChain(arrived_time);
+				do execute_trip_chain(arrived_time);
 			}
 
 		}

@@ -11,12 +11,12 @@ model SwITCh
  */
 species EventManager control: event_manager {
 	// Get total size
-	int getSize {
+	int get_size {
 		return size;
 	}
 	
 	// Get size sorted by species
-	map getSizeBySpecies {
+	map get_size_by_species {
 		return size_by_species;
 	}
 }
