@@ -39,20 +39,6 @@ species Car parent: PrivateTransport {
 		available_graph <- world.full_network;
 	}
 
-	// Implementation of end
-	action end (date arrived_time) {
-		do updateOwnPosition();
-		do updatePassengerPosition();
-		loop passenger over: passengers {
-			ask passenger {
-				do executeTripChain(arrived_time);
-			}
-
-		}
-
-		//displayed <- false;
-	}
-
 	// Default aspect
 	aspect default {
 		if displayed {

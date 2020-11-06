@@ -39,6 +39,9 @@ species Individual skills: [scheduling] {
 
 	// If true, this individual is joining an activity (waiting a bus or in transport for example)
  	bool joining_activity <- false;
+ 	
+ 	// If true this individual init his/her activity 
+ 	bool init <- false;
 
 	// The working place
 	Building working_place <- nil;
@@ -52,45 +55,87 @@ species Individual skills: [scheduling] {
 	// His/Her car
 	Car car <- nil;
 
+	
 	// Add trip
-	action pushTrip (Trip p) {
-		push item: p to: trip_chain;
+	action pushTrip (Trip trip) {
+		// Add the current trip		
+		push item: trip to: trip_chain;
 	}
+	
 
 	// Get and remove next trip
 	Trip popTrip {
 		return pop(trip_chain);
 	}
+	
+	// Get and remove next trip
+	Trip firstTrip {
+		return first(trip_chain);
+	}
 
 	// Execute one trip of the chain
 	action executeTripChain (date start_time) {
-		// If this is not the first trip then kil it
+		// If this is not the first trip then kill it
 		if current_trip != nil {
 			ask current_trip {
 				do die;
 			}
-
 		}
-
-		// If there is another trip
- 		if length(trip_chain) > 0 {
-			current_trip <- popTrip();
-			current_transport <- current_trip.transport;
-			ask current_trip {
-				do start(myself.location, start_time);
+		
+		// If not init
+		if not init {	
+			// If there is another trip
+	 		if length(trip_chain) > 0 {			
+				current_trip <- popTrip();
+				current_transport <- current_trip.transport;
+		
+				ask current_trip {
+					do start(myself.location, start_time);
+				}
+				
+	
+			} else {
+				// Exit network: Walk max speed
+				date exit_date <- start_time + ((location distance_to current_target) / 1.6666); // speed max walk
+				do later the_action: exitNetwork at: exit_date;
 			}
-
+			
+		} else if length(trip_chain) > 0 {		
+			// Set init false;	
+			init <- false;
+			
+			// Pre compute and get first crossroad location
+			ask firstTrip() {
+				myself.current_target <- preCompute(myself.location);
+			}
+			
+			// Entry network: Walk max speed
+			date entry_date <- start_time + ((location distance_to current_target) / 1.6666); // speed max walk
+			do later the_action: entryNetwork at: entry_date;
 		} else {
-			current_transport <- nil;
-			joining_activity <- false;
-			location <- current_target;
+			write "Something wrong: there is no trip to plan and this it's not initialized";
 		}
 
+		
+	}
+	
+	// Entry network
+	action entryNetwork {
+		do executeTripChain (event_date); 
+	}
+	
+	// Exit network
+	action exitNetwork {
+		current_transport <- nil;
+		joining_activity <- false;
+		location <- current_target;
 	}
 
 	// Work action
  	action work (Activity activity) {
-		if working_place != nil {
+ 		// If this individual has working place and if tje current 
+ 		// location is not already inside the building
+		if working_place != nil and not (working_place.shape overlaps location) {
 			do computeActivity(activity, working_place);
 		}
 
@@ -98,7 +143,7 @@ species Individual skills: [scheduling] {
 
 	// Familly action
  	action familly (Activity activity) {
-		if home_place != nil {
+		if home_place != nil and not (home_place.shape overlaps location)  {
 			do computeActivity(activity, home_place);
 		}
 
@@ -107,6 +152,8 @@ species Individual skills: [scheduling] {
 	// Compute activity
  	action computeActivity (Activity activity, Building target) {
 		if not joining_activity {
+			// Compute activity -> init true
+			init <- true;
 			joining_activity <- true;
 			current_activity <- activity;
 			do computeTransportTrip(target);
@@ -122,14 +169,9 @@ species Individual skills: [scheduling] {
 
 	// Compute transport trip
  	action computeTransportTrip (Building building) {
-		if hasCar() {
-			//do pushTrip(world.createTrip(world.createWalk(), self, car.location));
- 			//do pushTrip(world.createTrip(car, self, any_location_in(building.shape))); // TODO closest location on the graph
-			//do pushTrip(world.createTrip(world.createWalk(), self, any_location_in(building.shape)));
-		} else {
-		}
-		do pushTrip(world.createTrip(world.createWalk(), self, any_location_in(building.shape)));
+		do pushTrip(world.createTrip(world.createWalk(), self, any_location_in(building.shape)));		
 	}
+	
 
 	// Add activity in agenda
  	action addActivity (Activity activity) {

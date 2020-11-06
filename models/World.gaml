@@ -128,9 +128,9 @@ experiment SwITCh type: gui {
 			species SimpleRoadModel;
 			species Crossroad;
 			species Building;
-			species Individual;
 			species Walk;
 			species Car;
+			species Individual;
 		}
 
 	}

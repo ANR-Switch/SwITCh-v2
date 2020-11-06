@@ -14,7 +14,20 @@ import "Transport.gaml"
  */
 species PrivateTransport parent: Transport virtual: true {
 
-	// Still virtual end travel
-	action end (date arrived_time) virtual: true;
+	// Implementation of end
+	action end (date arrived_time) {
+		do updateOwnPositionEnd();
+		do updatePassengerPosition();
+		
+		loop passenger over: passengers {
+			ask passenger {
+				do executeTripChain(arrived_time);
+			}
+
+		}
+
+		do die;
+	}
+
 }
 

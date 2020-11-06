@@ -12,7 +12,7 @@ import "Transport.gaml"
  * Add to world the action to create a new trip
  */
 global {
-// Create a new trip
+	// Create a new trip
 	Trip createTrip (Transport tripTransport, Individual tripIndividual, point tripTarget) {
 		create Trip returns: trips {
 			transport <- tripTransport;
@@ -22,14 +22,13 @@ global {
 
 		return trips[0];
 	}
-
 }
 
 /** 
  * Trip species
  */
 species Trip {
-// The transport
+	// The transport
 	Transport transport;
 
 	// The individual
@@ -40,22 +39,24 @@ species Trip {
 
 	// Start the trip
 	action start (point position, date start_time) {
-	// Set the current target of the individual
+		// Set the current target of the individual
 		ask individual {
 			current_target <- myself.target;
 		}
 
-		// Ask the transport to add this individual;
 		ask transport {
+			// Ask the transport to add this individual;
 			do getIn(myself.individual);
-		}
-
-		// And start moving
-		ask transport {
+			// And start moving
 			do start(position, myself.target, start_time);
 		}
-
 	}
-
+	
+	// Start the trip
+	point preCompute (point position) {
+		ask transport {
+			// PreCompute
+			return preCompute(position, myself.target);
+		}
+	}
 }
-

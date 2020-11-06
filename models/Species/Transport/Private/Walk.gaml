@@ -20,7 +20,6 @@ global {
 
 		return walks[0];
 	}
-
 }
 	
 /** 
@@ -29,7 +28,7 @@ global {
  * Implement PrivateTransport (and Transport) species
  */
 species Walk parent: PrivateTransport {
-	
+		
 	// Init speed, size and capacity
 	init {
 		max_speed <- 6.0;
@@ -38,16 +37,6 @@ species Walk parent: PrivateTransport {
 		available_graph <- world.full_network;
 	}
 
-	action end (date arrived_time) {
-		loop passenger over: passengers {
-			ask passenger {
-				do executeTripChain(arrived_time);
-			}
-
-		}
-
-		do die;
-	}
 
 	aspect default {
 		draw square(6) color: #green border: #black;

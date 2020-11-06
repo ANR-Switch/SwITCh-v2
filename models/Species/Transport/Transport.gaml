@@ -38,6 +38,12 @@ species Transport virtual: true skills: [scheduling] {
 	// Passenger capacity 
 	int max_passenger;
 
+	// If true is already computed
+	bool computed <- false;
+	
+	// If true path is nil
+	bool path_nil <- false;
+
 	// Passenger get in the transport
 	bool getIn (Individual i) {
 	// Can't be more than the max capacity
@@ -53,17 +59,40 @@ species Transport virtual: true skills: [scheduling] {
 	action getOut (Individual i) {
 		remove item: i from: passengers;
 	}
+	
+	// Compute
+	action compute(point start_location, point end_location) {
+		path the_path <- path_between(available_graph, start_location, end_location);
+		if (the_path = nil) {
+			// Something wrong
+			path_nil <- true;
+		} else {
+			path_to_target <- list<Road>(the_path.edges);
+		}
+		computed <- true;
+	}
+	
+	// Pre compute path
+	point preCompute(point start_location, point end_location) {
+		do compute(start_location, end_location);
+		if (computed and not path_nil) {
+			return first(path_to_target).start_node.location;
+		}
+		return nil;
+	}
 
 	// Start to move
 	action start (point start_location, point end_location, date start_time) {
-		path the_path <- path_between(available_graph, start_location, end_location);
-		if (the_path = nil) {
-		// Something wrong
+		if not computed {
+			do compute(start_location, end_location);
+		} 
+
+		if (computed and path_nil) {
+			// Something wrong
 			write "The path is nil so there is (maybe) a problem with the graph";
 			do end(start_time);
 		} else {
-			path_to_target <- list<Road>(the_path.edges);
-			do updateOwnPosition();
+			do updateOwnPositionStart();
 			do updatePassengerPosition();
 			do later the_action: changeRoad at: start_time;
 		}
@@ -75,16 +104,20 @@ species Transport virtual: true skills: [scheduling] {
 
 	// Change road signal
 	action changeRoad {
-	// Leave the current road
-		ask getCurrentRoad() {
-			do leave(myself, myself.event_date);
+		// Leave the current road
+		Road r <- getCurrentRoad();
+		if r != nil {
+			ask getCurrentRoad() {
+				do leave(myself, myself.event_date);
+			}
+		
 		}
 
 		remove first(path_to_target) from: path_to_target;
 
 		// Join the next road
 		if hasNextRoad() {
-			do updateOwnPosition();
+			do updateOwnPositionStart();
 			do updatePassengerPosition();
 			ask getCurrentRoad() {
 				do join(myself, myself.event_date);
@@ -97,8 +130,13 @@ species Transport virtual: true skills: [scheduling] {
 	}
 
 	// Update transport position
-	action updateOwnPosition {
+	action updateOwnPositionStart {
 		location <- getCurrentRoad().start_node.location;
+	}
+	
+	// Update transport position
+	action updateOwnPositionEnd {
+		location <- getCurrentRoad().end_node.location;
 	}
 
 	// For each 'changeRoad' we must redefine the position of all passengers
