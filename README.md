@@ -38,4 +38,11 @@ New version of SwITCh simulation.
  ```gaml
  display my_display
  ```
- 
+ - GAML folder
+ ```
+ MyFolder
+ ```
+  - GAML file
+ ```
+ MyFile.gaml
+ ```

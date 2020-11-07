@@ -16,10 +16,10 @@ global {
 	list<string> activity_types const: true <- ["shopping", "administration", "studying", "university", "familly", "healt", "leisure", "work", "other"];
 
 	// Create a new activity with starting time, type and duration
-	Activity create_activity (date act_starting_time, int act_type) {
+	Activity create_activity (date activity_start_date, int activity_type) {
 		create Activity returns: activities {
-			starting_time <- act_starting_time;
-			activity_type <- act_type;
+			start_date <- activity_start_date;
+			type <- activity_type;
 		}
 
 		return activities[0];
@@ -32,19 +32,14 @@ global {
  */
 species Activity {
 	// Starting date
-	date starting_time;
+	date start_date;
 
 	// Type
-	int activity_type;
+	int type;
 
 	// Get type (string)
 	string get_activity_type_string {
-		return activity_types[activity_type];
-	}
-
-	// Get type
-	int get_activity_type {
-		return activity_type;
+		return activity_types[type];
 	}
 
 	// Schedule
@@ -52,11 +47,11 @@ species Activity {
 		ask individual {
 			switch myself.get_activity_type_string() {
 				match "familly" {
-					do later the_action: familly at: myself.starting_time refer_to: myself;
+					do later the_action: familly at: myself.start_date refer_to: myself;
 				}
 
 				match "work" {
-					do later the_action: work at: myself.starting_time refer_to: myself;
+					do later the_action: work at: myself.start_date refer_to: myself;
 				}
 
 			}

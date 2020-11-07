@@ -51,6 +51,9 @@ species Transport virtual: true skills: [scheduling] {
 	
 	// If true the transport is visible
 	bool is_visible <- false;
+	
+	// If true is connexion trip
+	bool is_connexion <- false;
 
 	// List of roads that lead to the target (must be computed)
 	list<Road> path_to_target;
@@ -109,19 +112,39 @@ species Transport virtual: true skills: [scheduling] {
 	// Start to move
 	action start (point start_location, point end_location, date start_time) {
 		is_visible <- true;
+		
+		if is_connexion {
+			// Start connexion
+			do start_connexion(end_location, start_time);	
+		} else {
+			// Start standard
+			do start_standard(start_location, end_location, start_time);			
+		}
+		
+	}
+	
+	// Start to move
+	action start_connexion (point end_location, date start_time) {
+		do end(start_time);
+	}
+	
+	// Start to move
+	action start_standard (point start_location, point end_location, date start_time) {
 		if not computed {
 			do compute(start_location, end_location);
 		} 
 
 		if (computed and path_nil) {
 			// Something wrong
-			write "The path is nil so there is (maybe) a problem with the graph";
+			write "---------------------------------------------------";
+			write "The path is nil";
+			write "Transport: " + self;
+			write "---------------------------------------------------";
 			do end(start_time);
 		} else {
 			do update_positions(get_current_road().get_entry_point());
 			do later the_action: change_road at: start_time;
 		}
-
 	}
 
 	// Virtual end travel
@@ -186,5 +209,18 @@ species Transport virtual: true skills: [scheduling] {
 		}
 
 	}
+	
+	/**
+	 * Utilities
+	 */
 
+	// Convert km/h to m/s
+	float get_speed_meter_per_second {
+		return max_speed / 3.6;
+	}
+
+	// Compute straight forward free flow travel time (in seconds) from location of transport to target
+	float compute_straight_forward_duration(point target) {
+		return (location distance_to target) / get_speed_meter_per_second(); 
+	}
 }

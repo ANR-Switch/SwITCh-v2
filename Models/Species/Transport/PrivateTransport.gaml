@@ -18,6 +18,7 @@ species PrivateTransport parent: Transport virtual: true {
 	action end (date arrived_time) {
 		is_visible <- false;
 		
+		// For each passenger execute next trip
 		loop passenger over: passengers {
 			ask passenger {
 				do execute_trip_chain(arrived_time);

@@ -27,6 +27,11 @@ global {
 
 		return trips[0];
 	}
+	
+	// Create a new trip
+	Trip create_connexion_trip (Individual trip_individual, point trip_target) {
+		return create_trip(world.create_walk_connexion(), trip_individual, trip_target);
+	}
 }
 
 /** 
@@ -44,11 +49,6 @@ species Trip {
 	
 	// Start the trip
 	action start (point position, date start_time) {
-		// Set the current target of the individual
-		ask individual {
-			current_target <- myself.target;
-		}
-
 		ask transport {
 			// Ask the transport to add this individual;
 			do get_in(myself.individual);
@@ -63,5 +63,18 @@ species Trip {
 			// PreCompute
 			return pre_compute(position, myself.target);
 		}
+	}
+	
+	// Compute straight forward free flow travel time (in seconds) from location of transport to target
+	float compute_straight_forward_duration {
+		return transport.compute_straight_forward_duration(target); 
+	}
+	
+	// Die transport and trip
+	action clean_die {
+		ask transport {
+			do die;
+		}
+		do die;
 	}
 }

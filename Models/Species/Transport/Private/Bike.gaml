@@ -40,7 +40,7 @@ species Bike parent: PrivateTransport {
 	// Default aspect
 	aspect default {
 		if is_visible {
-			draw square(6) color: #blue border: #black;
+			draw square(8) color: #blue border: #black;
 		}
 
 	}

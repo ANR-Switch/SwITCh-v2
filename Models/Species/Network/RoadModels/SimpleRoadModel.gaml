@@ -27,8 +27,8 @@ species SimpleRoadModel parent: Road {
 			myself.current_capacity <- myself.current_capacity - size;
 		}
 
-		// Ask the transport to change road when the travel time is reached	
-		ask transport {
+		// Ask the transport to change road when the travel time is reached
+		ask transport {			
 			do later the_action: change_road at: request_time + travelTime;
 		}
 
