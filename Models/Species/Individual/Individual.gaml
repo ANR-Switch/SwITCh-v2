@@ -136,19 +136,19 @@ species Individual skills: [scheduling] {
 		if not has_car and not has_bike {
 			transport <- world.create_walk();
 		} else if has_car and not has_bike {
-			if distance > 0.5 #km {
+			if distance > 5.0 #km {
 				transport <- world.create_car();
 			} else {
 				transport <- world.create_walk();
 			}
 		} else if not has_car and has_bike {
-			if distance > 0.5 #km {
+			if distance > 5.0 #km {
 				transport <- world.create_bike();
 			} else {
 				transport <- world.create_walk();
 			}
 		} else if has_car and has_bike {
-			if distance > 1.0 #km {
+			if distance > 5.0 #km {
 				transport <- world.create_car();
 			} else if distance > 0.5 #km {
 				transport <- world.create_bike();

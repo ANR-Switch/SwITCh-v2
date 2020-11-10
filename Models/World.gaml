@@ -6,8 +6,7 @@
 */
 model SwITCh
 
-import "Utilities/Scheduler.gaml"
-import "Species/Network/RoadModels/SimpleRoadModel.gaml"
+import "Utilities/EventManager.gaml"
 import "Species/Individual/Individual.gaml"
 import "Species/Building.gaml"
 import "Species/Network/Road.gaml"
@@ -22,7 +21,7 @@ global {
 
 	// Starting date of the simulation 
 	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
-	float step <- 0.5 #minute;
+	float step <- 0.1;
 
 	// Get general configuration
 	file config <- json_file("../Parameters/Config.json");
@@ -36,6 +35,8 @@ global {
 	shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
 	shape_file shape_nodes <- shape_file(dataset + "/nodes.shp");
 	shape_file shape_roads <- shape_file(dataset + "/roads.shp");
+	shape_file shape_boundary <- shape_file(dataset + "/boundary.shp");
+	
 	
 	// Graph configuration
 	string optimizer_type <- "NBAStar" among: ["NBAStar", "NBAStarApprox", "Dijkstra", "AStar", "BellmannFord", "FloydWarshall"];
@@ -45,31 +46,31 @@ global {
 	list<Road> roads -> {agents of_generic_species Road};
 
 	// Change the geometry of the world
-	geometry shape <- envelope(shape_roads);
+	geometry shape <- envelope(shape_boundary);
 
 	// Networks
 	graph full_network;
 
 	// Init the model
 	init {
-	// Only one event manager
+		// Only one event manager
 		create EventManager;
 
 		// Create nodes (must be defined before roads in order to build the road with two crossroads) TODO OSM data ?
 		create Crossroad from: shape_nodes;
-
-		// Create roads from database
-		create SimpleRoadModel from: shape_roads with:
-		[type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")];
-
+		
+		// Create roads
+		create Road from: shape_roads as list with:
+		[model_type:: "micro", type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")];
+			
 		// Create buildings from database (must be defined before individuals in order to build the individual with home place and working place)
 		create Building from: shape_buildings with: [id::int(read("id")), type::read("type")];
 
 		// Create individuals from database 
-		create Individual from: shape_individuals with: [working_place::one_of(Building where (each.id = read("work_pl"))), home_place::one_of(Building where
+		create Individual from: shape_individuals[0] with: [working_place::one_of(Building where (each.id = read("work_pl"))), home_place::one_of(Building where
 		(each.id = read("home_pl"))), age::int(read("age"))];
 
-		// Get networks from definitions		
+		// Get networks		
 		full_network <- directed(as_edge_graph(roads, Crossroad));
 		
 		//allows to choose the type of algorithm to use compute the shortest paths
@@ -126,15 +127,18 @@ global {
 experiment "SwITCh" type: gui {
 	output {
 		display main_window type: opengl {
-			species SimpleRoadModel;
+			species Road;
+			
 			species Crossroad;
 			species Building;
 
 			species Walk;
 			species Car;
 			species Bike;
-
+			
 			species Individual;
+			species TransportWrapper;
+
 		}
 
 	}

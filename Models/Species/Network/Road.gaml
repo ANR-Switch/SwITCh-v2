@@ -6,13 +6,16 @@
 */
 model SwITCh
 
-import "Crossroad.gaml"
-import "../Transport/Transport.gaml"
+import "RoadModel/RoadModelInterface.gaml"
+import "RoadModel/RoadModel.gaml"
+import "RoadModel/Model/SimpleRoadModel.gaml"
+import "RoadModel/Model/MicroRoadModel.gaml"
+import "RoadModel/Model/SimpleMicroRoadModel.gaml"
 
 /** 
  * Road virtual species
  */
-species Road virtual: true {
+species Road parent: RoadModelInterface {
 
 	// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
 	string type;
@@ -52,6 +55,12 @@ species Road virtual: true {
 
 	// Used to double the roads (to have two distinct roads if this is not a one-way road)
 	point trans;
+	
+	// Model type
+	string model_type <- "simple" among: ["simple", "micro", "simple-micro"];
+	
+	// The model
+	RoadModel road_model;
 
 	// Start crossroad node
 	Crossroad start_node;
@@ -65,23 +74,23 @@ species Road virtual: true {
 	// Actual free space capacity of the road (in meters)
 	float current_capacity <- max_capacity min: 0.0 max: max_capacity;
 
-	// Virtual join the road
-	action join (Transport transport, date request_time) virtual: true;
-
-	// Virtual leave the road
-	action leave (Transport transport, date request_time) virtual: true;
-	
-	// Get entry point in the road
-	point get_entry_point virtual: true;
-	
-	// Get exit point in the road
-	point get_exit_point virtual: true;
-	
-	// Init the road
+ 	// Init the road
 	init {
 		// Set start and end crossroads
 		start_node <- Crossroad(first(self.shape.points));
 		end_node <- Crossroad(last(self.shape.points));
+		
+		switch model_type {
+			match "micro" {
+				road_model <- world.create_micro_road_model(self);
+			}
+			match "simple" {
+				road_model <- world.create_simple_road_model(self);
+			}
+			match "simple-micro" {
+				road_model <- world.create_simple_micro_road_model(self);
+			}
+		}
 		
 		// Get translations (in order to draw two roads if there is two directions)
 		point A <- start_node.location;
@@ -101,18 +110,47 @@ species Road virtual: true {
 
 	}
 
-	// Get size
+	// Implement join the road
+	action join (Transport transport, date request_time) {
+		ask road_model {
+			do join(transport, request_time);
+		}
+	}
+
+	// Implement leave the road
+	action leave (Transport transport, date request_time) {
+		ask road_model {
+			write "LEAVE ROAD " + request_time;
+			do leave(transport, request_time);
+		}
+	}
+	
+	// Implement get entry point in the road
+	point get_entry_point {
+		return road_model.get_entry_point();
+	}
+	
+	// Implement get exit point in the road
+	point get_exit_point {
+		return road_model.get_exit_point();
+	}
+	
+	// Implement get size
 	float get_size {
 		return shape.perimeter;
 	}
-
-	// Get free flow travel time in secondes (time to cross the road when the speed of the transport is equals to the maximum speed)
+	
+	// Implement get max freeflow speed
+	float get_max_freeflow_speed (Transport transport) {
+		return min([transport.max_speed, max_speed]) #km / #h;
+	}
+	
+	// Implement get free flow travel time in secondes (time to cross the road when the speed of the transport is equals to the maximum speed)
 	float get_free_flow_travel_time (Transport transport) {
-		float max_freeflow_speed <- min([transport.max_speed, max_speed]) #km / #h;
-		return get_size() / max_freeflow_speed;
+		return get_size() / get_max_freeflow_speed(transport);
 	}
 
-	// True if this road has capacity
+	// Implement true if this road has capacity
 	bool has_capacity (float capacity) {
 		return current_capacity > capacity;
 	}

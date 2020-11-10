@@ -6,7 +6,7 @@
 */
 model SwITCh
 
-import "../../Utilities/Scheduler.gaml"
+import "../../Utilities/EventManager.gaml"
 import "../Network/Road.gaml"
 import "../Individual/Individual.gaml"
 
@@ -112,12 +112,13 @@ species Transport virtual: true skills: [scheduling] {
 	// Start to move
 	action start (point start_location, point end_location, date start_time) {
 		is_visible <- true;
-		
 		if is_connexion {
 			// Start connexion
+			write "START CONNEXION " + start_location + " : " + end_location + " : " + start_time;
 			do start_connexion(end_location, start_time);	
 		} else {
 			// Start standard
+			write "START STANDARD " + start_location + " : " + end_location + " : " + start_time;
 			do start_standard(start_location, end_location, start_time);			
 		}
 		
@@ -143,7 +144,10 @@ species Transport virtual: true skills: [scheduling] {
 			do end(start_time);
 		} else {
 			do update_positions(get_current_road().get_entry_point());
-			do later the_action: change_road at: start_time;
+			write "CHANGE ROAD TRANSPORT " + start_time;
+			ask get_current_road() {
+				do join(myself, start_time);
+			}
 		}
 	}
 
@@ -189,6 +193,7 @@ species Transport virtual: true skills: [scheduling] {
 		Road r <- get_current_road();
 		if r != nil {
 			ask r {
+				write "LEAVE TRANSPORT " + myself.event_date;
 				do leave(myself, myself.event_date);
 			}
 		

@@ -1,7 +1,8 @@
 {
     "metro_boulot_dodo": [
         {
-            "starting_date" : 28800.0,
+            "starting_date_old" : 28800.0,
+            "starting_date" : 0.0,
             "activity_type" : 7
         },
         {

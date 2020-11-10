@@ -28,6 +28,7 @@ global {
  * Implement PrivateTransport (and Transport) species
  */
 species Car parent: PrivateTransport {
+	geometry shape <- square(8);
 
 	// Init speed, size and capacity
 	init {
@@ -35,12 +36,13 @@ species Car parent: PrivateTransport {
 		size <- 4.13; // Argus average size in meters
 		max_passenger <- 5;
 		available_graph <- world.full_network;
+		
 	}
 
 	// Default aspect
 	aspect default {
 		if is_visible {
-			draw square(8) color: #brown border: #black;
+			draw shape color: #brown border: #black;
 		}
 
 	}
