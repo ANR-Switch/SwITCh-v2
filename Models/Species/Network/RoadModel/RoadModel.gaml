@@ -27,6 +27,15 @@ species RoadModel virtual: true parent: RoadModelInterface {
 	
 	// Virtual get exit point in the road
 	point get_exit_point virtual: true;
+	
+	// Virtual get transports
+	list<Transport> get_transports virtual: true;
+
+	// Virtual set transports
+	action set_transports (list<Transport> transport_list) virtual: true;
+	
+	// Virtual clear transports
+	action clear_transports virtual: true;
 
 	// Get size
 	float get_size {

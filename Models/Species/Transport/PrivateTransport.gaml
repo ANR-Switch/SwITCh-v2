@@ -27,6 +27,8 @@ species PrivateTransport parent: Transport virtual: true {
 		}
 
 		// "getOut" is not necessary because -> die
+		// Clear all events and die
+		do clear_events;
 		do die;
 	}
 

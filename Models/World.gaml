@@ -12,12 +12,15 @@ import "Species/Building.gaml"
 import "Species/Network/Road.gaml"
 import "Species/Network/Crossroad.gaml"
 import "Species/Transport/Private/Car.gaml"
-import "Species/Transport/Private/Walk.gaml"
+import "Species/Network/RoadModel/Model/MicroRoad/TransportWrapper.gaml"
 
 /** 
  * Setup the world
  */
 global {
+	
+	// If true set all mixed road to micro
+	bool micro_level <- false;
 
 	// Starting date of the simulation 
 	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
@@ -37,13 +40,9 @@ global {
 	shape_file shape_roads <- shape_file(dataset + "/roads.shp");
 	shape_file shape_boundary <- shape_file(dataset + "/boundary.shp");
 	
-	
 	// Graph configuration
 	string optimizer_type <- "NBAStar" among: ["NBAStar", "NBAStarApprox", "Dijkstra", "AStar", "BellmannFord", "FloydWarshall"];
 	bool memorize_shortest_paths <- true; //true by default
-
-	// TODO : to review : init value when all agents created or a function ?
-	list<Road> roads -> {agents of_generic_species Road};
 
 	// Change the geometry of the world
 	geometry shape <- envelope(shape_boundary);
@@ -61,24 +60,15 @@ global {
 		
 		// Create roads
 		create Road from: shape_roads as list with:
-		[model_type:: "micro", type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")];
+		[model_type:: read("model_type"), type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")];
 			
 		// Create buildings from database (must be defined before individuals in order to build the individual with home place and working place)
 		create Building from: shape_buildings with: [id::int(read("id")), type::read("type")];
 
 		// Create individuals from database 
-		create Individual from: shape_individuals[0] with: [working_place::one_of(Building where (each.id = read("work_pl"))), home_place::one_of(Building where
+		create Individual from: shape_individuals with: [working_place::one_of(Building where (each.id = read("work_pl"))), home_place::one_of(Building where
 		(each.id = read("home_pl"))), age::int(read("age"))];
-
-		// Get networks		
-		full_network <- directed(as_edge_graph(roads, Crossroad));
 		
-		//allows to choose the type of algorithm to use compute the shortest paths
-		full_network <- full_network with_optimizer_type optimizer_type;
-
-		//allows to define if the shortest paths computed should be memorized (in a cache) or not
-		full_network <- full_network use_cache memorize_shortest_paths;
-
 		// ############################ WIP IN PROGRESS TEST WARNING WARNING 
 		// Setup Individuals
 		file fake_agenda_json <- json_file("../Parameters/Agendas.json");
@@ -119,12 +109,43 @@ global {
 
 		}
 		// ############################ WARNING WARNING WIP IN PROGRESS TEST 
-	}
+		
+		// Get networks		
+		full_network <- directed(as_edge_graph(Road, Crossroad));
+		
+		//allows to choose the type of algorithm to use compute the shortest paths
+		full_network <- full_network with_optimizer_type optimizer_type;
 
+		//allows to define if the shortest paths computed should be memorized (in a cache) or not
+		full_network <- full_network use_cache memorize_shortest_paths;
+		
+		// TODO ???????? wtf because Agents are not actived
+		create TransportWrapper {
+			do die;
+		}
+		
+		// TODO ???????? wtf because Agents are not actived
+		create Walk {
+			do die;
+		}
+		
+		// TODO ???????? wtf because Agents are not actived
+		create Car {
+			do die;
+		}
+		
+		// TODO ???????? wtf because Agents are not actived
+		create Bike {
+			do die;
+		}
+	}
 }
 
 // The main experiment
 experiment "SwITCh" type: gui {
+	// Speed of the "controled car"
+	parameter "Micro level" var: micro_level category: "Models";
+	
 	output {
 		display main_window type: opengl {
 			species Road;

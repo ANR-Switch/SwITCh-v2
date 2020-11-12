@@ -59,6 +59,9 @@ species Road parent: RoadModelInterface {
 	// Model type
 	string model_type <- "simple" among: ["simple", "micro", "simple-micro"];
 	
+	// Border color
+	rgb border_color <- #grey;
+	
 	// The model
 	RoadModel road_model;
 
@@ -81,13 +84,15 @@ species Road parent: RoadModelInterface {
 		end_node <- Crossroad(last(self.shape.points));
 		
 		switch model_type {
-			match "micro" {
-				road_model <- world.create_micro_road_model(self);
-			}
 			match "simple" {
 				road_model <- world.create_simple_road_model(self);
 			}
+			match "micro" {
+				border_color <- #blue;
+				road_model <- world.create_micro_road_model(self);
+			}
 			match "simple-micro" {
+				border_color <- #purple;
 				road_model <- world.create_simple_micro_road_model(self);
 			}
 		}
@@ -120,7 +125,6 @@ species Road parent: RoadModelInterface {
 	// Implement leave the road
 	action leave (Transport transport, date request_time) {
 		ask road_model {
-			write "LEAVE ROAD " + request_time;
 			do leave(transport, request_time);
 		}
 	}
@@ -158,7 +162,7 @@ species Road parent: RoadModelInterface {
 	// Default aspect
 	aspect default {
 		geometry geom_display <- (shape + lanes);
-		draw geom_display translated_by (trans * 2) border: #gray color: rgb(255 * ((max_capacity - current_capacity) / max_capacity), 0, 0);
+		draw geom_display translated_by (trans * 2) border: border_color color: rgb(255 * ((max_capacity - current_capacity) / max_capacity), 0, 0);
 	}
 
 }

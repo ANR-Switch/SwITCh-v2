@@ -15,10 +15,10 @@ import "../PrivateTransport.gaml"
 global {
 	// Create a new bike
 	Bike create_bike {
-		create Bike returns: bikes {
+		create Bike returns: values {
 		}
 
-		return bikes[0];
+		return values[0];
 	}
 }
 

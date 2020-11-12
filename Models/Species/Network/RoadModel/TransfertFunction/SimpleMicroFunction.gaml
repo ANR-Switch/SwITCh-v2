@@ -14,11 +14,13 @@ import "TransfertFunction.gaml"
  */
 global {
 	// Create a new function
-	SimpleMicroFunction create_simple_micro_function {
-		create SimpleMicroFunction returns: functions {
+	SimpleMicroFunction create_simple_micro_function(RoadModel multi_model) {
+		create SimpleMicroFunction returns: values {
+			a <- world.create_simple_road_model(multi_model.attached_road);
+			b <- world.create_micro_road_model(multi_model.attached_road);
 		}
 
-		return functions[0];
+		return values[0];
 	}
 }
 
@@ -28,18 +30,34 @@ global {
  */
 species SimpleMicroFunction parent: TransfertFunction {
 	
-	// Create models
-	action create_models(Road multi_road) {
-		
-	}
-	
-	// Model a to b transfert
-	action switch_to_b {
-		is_a_model <- false;
-	}
-	
 	// Model b to a transfert
 	action switch_to_a  {
-		is_a_model <- true;
+		if not is_a_model {
+			/*ask a {
+				list<Transport> transports <- myself.b.get_transports();
+				do set_transports(transports);
+			}
+			
+			ask b {
+				do clear_transports;	
+			}*/
+			
+			is_a_model <- true;
+		}
+	}
+
+	// Model a to b transfert
+	action switch_to_b {
+		if is_a_model {
+			/*ask b {
+				list<Transport> transports <- myself.a.get_transports();
+				do set_transports(transports);
+			}
+			ask a {
+				do clear_transports;	
+			}*/
+			
+			is_a_model <- false;
+		}
 	}
 }

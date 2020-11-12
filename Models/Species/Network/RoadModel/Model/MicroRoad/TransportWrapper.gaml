@@ -14,12 +14,20 @@ import "../../../../Transport/Transport.gaml"
 global {
 	
 	// Create tranport wrapper
-	TransportWrapper create_wrapper(Transport transport) {
-		create TransportWrapper returns: transports {
-			wrapped <- transport;
+	TransportWrapper create_wrapper(Transport transport_to_wrap, RoadModel road_model) {
+		create TransportWrapper returns: values {
+			current_road <- road_model;
+			wrapped <- transport_to_wrap;
+			location <- transport_to_wrap.location;
+			desired_speed <- road_model.attached_road.get_max_freeflow_speed(transport_to_wrap);
+			speed <- 0.0;
+			target <- road_model.get_exit_point();
+			size <- wrapped.size;
+			spacing <- size;
+			view <- size * 2;
 		}
 
-		return transports[0];
+		return values[0];
 	}
 	
 	// Get speed component from another (moving) agent
@@ -52,11 +60,11 @@ global {
  */
 species TransportWrapper skills: [moving] {
 
+	// The road
+	RoadModel current_road;
+	
 	// The wrapped transport
 	Transport wrapped;
-	
-	// Guest agents
-	list<agent> guest <- nil;
 	
 	// Reference of the followed car
 	agent next_moving_agent <- nil;
@@ -104,36 +112,17 @@ species TransportWrapper skills: [moving] {
 	float reactivity <- 3.0;
 	
 	// Spacing between two transport
-	float spacing <- 2 * size #m;
-
-	// Add new guest
-	action add_guest(TransportWrapper transport) {
-		if(transport != nil and !dead(transport) and transport is_skill "moving") {
-			add transport to: guest;
-		}
-	}
-	
-	// Add list of guests
-	action add_guests(list<TransportWrapper> transports) {
-		loop transport over: transports {
-			do add_guest(transport);
-		}
-	}
-	
-	// Remove guest
-	action remove_guest(TransportWrapper transport) {
-		remove transport from: guest;
-	}
+	float spacing <- (1.5 * size) #m;
 	
 	// Inner drive
 	action inner_drive {
 		direction <- {(target.x - location.x) / distance, (target.y - location.y) / distance};
 		
 		// Get all detected agents
-		list<agent> all_agents <- (guest
+		list<agent> all_agents <- (current_road.get_transports()
 			where (a: a != nil 						// Not nil
 				and !dead(a) 						// Not dead
-				and a != self						// Not itself
+				and a != wrapped					// Not itself
 				and a.shape overlaps sensing_zone 	// Overlap the effect_zone
 			)
 		);
@@ -189,9 +178,9 @@ species TransportWrapper skills: [moving] {
 		point rect_pos <- location + (direction * ((radius / 2.0) + (size / 2.0)));
 		sensing_zone <- rectangle(radius, radius / 2.0) at_location rect_pos rotated_by angle;
 	}
-
-	// Driver reflex
-	reflex drive {
+	
+	// TODO Must be a reflex -> Driver reflex
+	reflex moving when: (wrapped != nil and current_road != nil) {
 		bool exec_loop <- true;
 		int nb_loop <- 0;
 		

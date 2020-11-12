@@ -17,6 +17,6 @@ species EventManager control: event_manager {
 	
 	// Get size sorted by species
 	map get_size_by_species {
-		return size_by_species;
+		return size_by_agent;
 	}
 }

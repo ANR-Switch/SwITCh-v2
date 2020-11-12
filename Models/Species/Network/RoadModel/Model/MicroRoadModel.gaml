@@ -15,11 +15,11 @@ import "MicroRoad/TransportWrapper.gaml"
 global {
 	// Create a new road
 	MicroRoadModel create_micro_road_model (Road micro_attached_road) {
-		create MicroRoadModel returns: micro_roads {
+		create MicroRoadModel returns: values {
 			attached_road <- micro_attached_road;
 		}
 
-		return micro_roads[0];
+		return values[0];
 	}
 }
 
@@ -31,61 +31,71 @@ global {
  */
 species MicroRoadModel parent: RoadModel {
 	// The list of transport in this road
-	list<TransportWrapper> transports;
+	map<Transport, TransportWrapper> transports_wraps;
+	list<Transport> transports;
+
+	// Implementation get transports
+	list<Transport> get_transports  {
+		return transports;
+	}
 	
-	// Map of transport <-> wrapper
-	map<Transport, TransportWrapper> transports_map;
+	// Implementation set transports
+	action set_transports (list<Transport> transport_list) {
+		loop transport over: transport_list {
+			do add_transport(transport);
+		}
+	}
+	
+	// Clear transports
+	action clear_transports {
+		ask transports_wraps {
+			do die;
+		}
+		remove key: transports from: transports_wraps;
+		remove from: transports all: true;
+	}
+	
+	// Add transport
+	action add_transport(Transport transport) {
+		// Create wrap
+		TransportWrapper wrap <- world.create_wrapper(transport, self);
+		
+		// Add the wrapped transport
+		add transport to: transports;
+		add wrap at: transport to: transports_wraps;
+	}
+
+	// Remove transport
+	action remove_tansport(Transport transport) {
+		// Get wrap
+		TransportWrapper wrap <- transports_wraps[transport];
+		
+		if not dead(wrap) {
+			// Die wrapper	
+			ask wrap {
+				do die;
+			}		
+		}
+		
+		// Remove
+		remove transport from: transports;	
+		remove key: transport from: transports_wraps;
+	}
 
 	// Implementation of join
 	action join (Transport transport, date request_time) {
-		// Create wrap
-		TransportWrapper wrap <- world.create_wrapper(transport);
+		do add_transport(transport);
 		
 		// Change capacity
 		ask transport {
 			myself.attached_road.current_capacity <- myself.attached_road.current_capacity - size;
 		}
-
-		// Add all transport as guest
-		ask wrap {
-			do add_guests(myself.transports);
-			location <- transport.location;
-			desired_speed <- myself.attached_road.get_max_freeflow_speed(transport);
-			speed <- desired_speed;
-			target <- myself.get_exit_point();
-			size <- wrapped.size;
-		}
-		
-		// Add this new transport as guest for all other transports
-		ask transports {
-			do add_guest(wrap);
-		}
-		
-		// Add the wrapped transport
-		add item: wrap to: transport;
-		add item: wrap at: transport to: transports_map;
 	}
 
 	// Implementation of leave
 	action leave (Transport transport, date request_time) {
-		// Get wrap
-		TransportWrapper wrap <- transports_map[transport];
-				
-		// Remove transport
-		ask transports {
-			do remove_guest(wrap);
-		}
+		do remove_tansport(transport);
 		
-		// Die wrapper
-		if wrap != nil {
-			ask wrap {
-				do die;
-			}
-		}
-		
-		// Remove from the map
-		remove transport from: transports_map;
-
 		// Change capacity		
 		ask transport {
 			myself.attached_road.current_capacity <- myself.attached_road.current_capacity + size;
@@ -102,3 +112,5 @@ species MicroRoadModel parent: RoadModel {
 		return attached_road.end_node.location;
 	}
 }
+
+

@@ -15,6 +15,8 @@ import "Agenda.gaml"
 
 /** 
  * Individuals species
+ * 
+ * TODO: if individuals have to die, don't forget to use clear_events before
  */
 species Individual skills: [scheduling] {
 
@@ -133,27 +135,31 @@ species Individual skills: [scheduling] {
 		point target <- any_location_in(target_building.shape);
 		float distance <- location distance_to target; // TODO must be distance in the graph 
 		Transport transport <- nil;
-		if not has_car and not has_bike {
-			transport <- world.create_walk();
-		} else if has_car and not has_bike {
-			if distance > 5.0 #km {
-				transport <- world.create_car();
-			} else {
+		
+		transport <- world.create_walk();
+		if false {
+			if not has_car and not has_bike {
 				transport <- world.create_walk();
-			}
-		} else if not has_car and has_bike {
-			if distance > 5.0 #km {
-				transport <- world.create_bike();
-			} else {
-				transport <- world.create_walk();
-			}
-		} else if has_car and has_bike {
-			if distance > 5.0 #km {
-				transport <- world.create_car();
-			} else if distance > 0.5 #km {
-				transport <- world.create_bike();
-			} else {
-				transport <- world.create_walk();
+			} else if has_car and not has_bike {
+				if distance > 5.0 #km {
+					transport <- world.create_car();
+				} else {
+					transport <- world.create_walk();
+				}
+			} else if not has_car and has_bike {
+				if distance > 5.0 #km {
+					transport <- world.create_bike();
+				} else {
+					transport <- world.create_walk();
+				}
+			} else if has_car and has_bike {
+				if distance > 5.0 #km {
+					transport <- world.create_car();
+				} else if distance > 0.5 #km {
+					transport <- world.create_bike();
+				} else {
+					transport <- world.create_walk();
+				}
 			}
 		}
 		// #################################

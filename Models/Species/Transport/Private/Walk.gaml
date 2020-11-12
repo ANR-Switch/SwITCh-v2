@@ -15,20 +15,20 @@ import "../PrivateTransport.gaml"
 global {
 	// Create a new walk
 	Walk create_walk {
-		create Walk returns: walks {
+		create Walk returns: values {
 			is_connexion <- false;
 		}
 
-		return walks[0];
+		return values[0];
 	}
 
 	// Create a new walk connexion
 	Walk create_walk_connexion {
-		create Walk returns: walks {
+		create Walk returns: values {
 			is_connexion <- true;
 		}
 
-		return walks[0];
+		return values[0];
 	}
 
 }

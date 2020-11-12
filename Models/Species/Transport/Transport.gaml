@@ -114,11 +114,9 @@ species Transport virtual: true skills: [scheduling] {
 		is_visible <- true;
 		if is_connexion {
 			// Start connexion
-			write "START CONNEXION " + start_location + " : " + end_location + " : " + start_time;
 			do start_connexion(end_location, start_time);	
 		} else {
 			// Start standard
-			write "START STANDARD " + start_location + " : " + end_location + " : " + start_time;
 			do start_standard(start_location, end_location, start_time);			
 		}
 		
@@ -144,7 +142,6 @@ species Transport virtual: true skills: [scheduling] {
 			do end(start_time);
 		} else {
 			do update_positions(get_current_road().get_entry_point());
-			write "CHANGE ROAD TRANSPORT " + start_time;
 			ask get_current_road() {
 				do join(myself, start_time);
 			}
@@ -193,7 +190,6 @@ species Transport virtual: true skills: [scheduling] {
 		Road r <- get_current_road();
 		if r != nil {
 			ask r {
-				write "LEAVE TRANSPORT " + myself.event_date;
 				do leave(myself, myself.event_date);
 			}
 		
