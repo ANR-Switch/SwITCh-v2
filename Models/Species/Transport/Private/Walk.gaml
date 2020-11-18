@@ -40,47 +40,46 @@ global {
  */
 species Walk parent: PrivateTransport {
 
+	// If true is connexion trip
+	bool is_connexion <- false;
+
 	// Init speed, size and capacity
 	init {
 		max_speed <- 6.0;
 		size <- 1.0;
 		max_passenger <- 1;
-		available_graph <- world.full_network;
+		network <- world.create_network(world.full_network);
 	}
-	
-	/**
-	 * Entry point
-	 */
 
-	// Implementation of end the behavior depends of the kind of walk
-	action end (date arrived_time) {
-		// If is connexion walk then do connexion
-		// Super end (PrivateNetwork) otherwise
+	// Start to move
+	action start (point start_location, point end_location, date start_time, Trip trip) {
+		current_trip <- trip;
+		is_visible <- true;
 		if is_connexion {
-			do connexion(arrived_time);
+			// Start connexion
+			do connexion(start_time);
 		} else {
-			return super.end(arrived_time);
-		}	
+			// Start standard
+			do start_standard(start_location, end_location, start_time);
+		}
+
 	}
-	
-	/**
-	 * Connexion behavior
-	 */
-	
+
 	// Start connexion
-	action connexion(date arrived_time) {
+	action connexion (date start_time) {
 		// First and the only passenger in walk
 		// Get location and target in order to compute the straight forward duration
 		location <- passengers[0].location;
-		point target <- passengers[0].get_target();
-		date connexion_date <- arrived_time + compute_straight_forward_duration(target);
-		
+		current_trip.current_target <- passengers[0].get_target();
+		date connexion_date <- start_time + compute_straight_forward_duration(current_trip.current_target);
+
 		// Do the normal behavior after straight forward duration
 		do later the_action: connexion_network at: connexion_date;
 	}
-	
+
 	// Super end (PrivateNetwork) wrapper
 	action connexion_network {
+		do update_positions(current_trip.current_target);
 		return super.end(event_date);
 	}
 

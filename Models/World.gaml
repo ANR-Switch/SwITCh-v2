@@ -12,7 +12,6 @@ import "Species/Building.gaml"
 import "Species/Network/Road.gaml"
 import "Species/Network/Crossroad.gaml"
 import "Species/Transport/Private/Car.gaml"
-import "Species/Network/RoadModel/Model/MicroRoad/TransportWrapper.gaml"
 
 /** 
  * Setup the world
@@ -24,7 +23,7 @@ global {
 
 	// Starting date of the simulation 
 	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
-	float step <- 0.1;
+	float step <- 1#minute;
 
 	// Get general configuration
 	file config <- json_file("../Parameters/Config.json");
@@ -60,15 +59,24 @@ global {
 		
 		// Create roads
 		create Road from: shape_roads as list with:
-		[model_type:: read("model_type"), type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")];
+		[
+			//model_type:: read("model_type"),
+			//model_type:: "simple",
+			//model_type:: "queued-simple",
+			//model_type:: "queue",
+			//model_type:: "micro",
+			//model_type:: "queued-micro",
+			type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")
+		];
 			
 		// Create buildings from database (must be defined before individuals in order to build the individual with home place and working place)
 		create Building from: shape_buildings with: [id::int(read("id")), type::read("type")];
 
+		
 		// Create individuals from database 
 		create Individual from: shape_individuals with: [working_place::one_of(Building where (each.id = read("work_pl"))), home_place::one_of(Building where
 		(each.id = read("home_pl"))), age::int(read("age"))];
-		
+
 		// ############################ WIP IN PROGRESS TEST WARNING WARNING 
 		// Setup Individuals
 		file fake_agenda_json <- json_file("../Parameters/Agendas.json");
@@ -83,8 +91,21 @@ global {
 				int random <- rnd(0, 100);
 				if (random <= 85) {
 					has_car <- true;
-					has_bike <- true;
+					has_bike <- true;	
 				}
+				
+				
+				/*if (random <= 24) {
+					a.start_date <- act_starting_time + (1800 * 0 + (1800 * rnd(0, 100) / 100));
+				} else if (random <= 50) {
+					a.start_date <- act_starting_time + (1800 * 1 + (1800 * rnd(0, 100) / 100));
+				} else if (random <= 76) {
+					a.start_date <- act_starting_time + (1800 * 2 + (1800 * rnd(0, 100) / 100));
+				} else if (random <= 94) {
+					a.start_date <- act_starting_time + (1800 * 3 + (1800 * rnd(0, 100) / 100));
+				} else if (random <= 100) {
+					a.start_date <- act_starting_time + (1800 * 4 + (1800 * rnd(0, 100) / 100));
+				}*/
 
 				do add_activity activity: a;
 				if home_place = nil and age >= 18 {
@@ -120,21 +141,15 @@ global {
 		full_network <- full_network use_cache memorize_shortest_paths;
 		
 		// TODO ???????? wtf because Agents are not actived
-		create TransportWrapper {
+		create TransportMovingWrapper {
 			do die;
 		}
-		
-		// TODO ???????? wtf because Agents are not actived
 		create Walk {
 			do die;
 		}
-		
-		// TODO ???????? wtf because Agents are not actived
 		create Car {
 			do die;
 		}
-		
-		// TODO ???????? wtf because Agents are not actived
 		create Bike {
 			do die;
 		}
@@ -158,8 +173,6 @@ experiment "SwITCh" type: gui {
 			species Bike;
 			
 			species Individual;
-			species TransportWrapper;
-
 		}
 
 	}

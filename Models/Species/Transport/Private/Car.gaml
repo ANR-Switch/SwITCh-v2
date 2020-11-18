@@ -35,8 +35,7 @@ species Car parent: PrivateTransport {
 		max_speed <- 130.0;
 		size <- 4.13; // Argus average size in meters
 		max_passenger <- 5;
-		available_graph <- world.full_network;
-		
+		network <- world.create_network(world.full_network);
 	}
 
 	// Default aspect

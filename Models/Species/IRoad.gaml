@@ -6,24 +6,21 @@
 */
 model SwITCh
 
-import "../Crossroad.gaml"
-import "../../Transport/Transport.gaml"
+import "Network/Crossroad.gaml"
+import "Transport/Transport.gaml"
 
 /** 
  * Road interface model virtual species
  */
-species RoadModelInterface virtual: true {
+species IRoad virtual: true {
 	// Virtual join the road
 	action join (Transport transport, date request_time) virtual: true;
 
 	// Virtual leave the road
 	action leave (Transport transport, date request_time) virtual: true;
 	
-	// Virtual get entry point in the road
-	point get_entry_point virtual: true;
-	
-	// Virtual get exit point in the road
-	point get_exit_point virtual: true;
+	// Virtual push in waiting queue
+	action push_in_waiting_queue (Transport transport) virtual: true;
 
 	// Virtual get size
 	float get_size virtual: true;
@@ -33,7 +30,7 @@ species RoadModelInterface virtual: true {
 	
 	// Virtual get free flow travel time in secondes (time to cross the road when the speed of the transport is equals to the maximum speed)
 	float get_free_flow_travel_time (Transport transport) virtual: true;
-
+	
 	// Virtual get true if this road has capacity
-	bool has_capacity (float capacity) virtual: true;
+	bool has_capacity (Transport transport) virtual: true;
 }

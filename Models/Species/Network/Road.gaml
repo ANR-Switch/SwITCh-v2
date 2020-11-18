@@ -6,18 +6,21 @@
 */
 model SwITCh
 
-import "RoadModel/RoadModelInterface.gaml"
-import "RoadModel/RoadModel.gaml"
-import "RoadModel/Model/SimpleRoadModel.gaml"
-import "RoadModel/Model/MicroRoadModel.gaml"
-import "RoadModel/Model/SimpleMicroRoadModel.gaml"
+import "../IRoad.gaml"
+import "../Model/RoadModel/RoadModel.gaml"
+import "../Model/RoadModel/SimpleModel/SimpleRoadModel.gaml"
+import "../Model/RoadModel/SimpleModel/MicroRoadModel.gaml"
+import "../Model/RoadModel/QueuedModel/SimpleQueuedRoadModel.gaml"
+import "../Model/RoadModel/QueuedModel/MicroQueuedRoadModel.gaml"
+import "../Network/Road.gaml"
+import "../Network/Crossroad.gaml"
 
 /** 
  * Road virtual species
  */
-species Road parent: RoadModelInterface {
+species Road parent: IRoad {
 
-	// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
+// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
 	string type;
 
 	// Is part of roundabout or not (OSM information)
@@ -55,13 +58,13 @@ species Road parent: RoadModelInterface {
 
 	// Used to double the roads (to have two distinct roads if this is not a one-way road)
 	point trans;
-	
+
 	// Model type
-	string model_type <- "simple" among: ["simple", "micro", "simple-micro"];
-	
+	string model_type <- "simple" among: ["simple", "micro", "queued-simple", "queued-micro"];
+
 	// Border color
 	rgb border_color <- #grey;
-	
+
 	// The model
 	RoadModel road_model;
 
@@ -77,26 +80,45 @@ species Road parent: RoadModelInterface {
 	// Actual free space capacity of the road (in meters)
 	float current_capacity <- max_capacity min: 0.0 max: max_capacity;
 
- 	// Init the road
+	// Init the road
 	init {
-		// Set start and end crossroads
+	// Set start and end crossroads
 		start_node <- Crossroad(first(self.shape.points));
 		end_node <- Crossroad(last(self.shape.points));
-		
-		switch model_type {
+
+		// TODO *********** 
+		/*switch model_type {
 			match "simple" {
 				road_model <- world.create_simple_road_model(self);
 			}
 			match "micro" {
-				border_color <- #blue;
 				road_model <- world.create_micro_road_model(self);
 			}
-			match "simple-micro" {
-				border_color <- #purple;
-				road_model <- world.create_simple_micro_road_model(self);
+			match "queued-simple" {
+				road_model <- world.create_simple_queue_road_model(self);
+			}
+			match "queued-micro" {
+				road_model <- world.create_micro_queue_road_model(self);
 			}
 		}
-		
+		*/
+		switch type {
+			match "residential" {
+			//road_model <- world.create_micro_queue_road_model(self);
+				road_model <- world.create_simple_queue_road_model(self);
+			}
+
+			default {
+			//road_model <- world.create_micro_queue_road_model(self);
+				road_model <- world.create_simple_queue_road_model(self);
+			}
+
+		}
+		// ***********
+
+		// Set border color
+		border_color <- road_model.color;
+
 		// Get translations (in order to draw two roads if there is two directions)
 		point A <- start_node.location;
 		point B <- end_node.location;
@@ -120,6 +142,7 @@ species Road parent: RoadModelInterface {
 		ask road_model {
 			do join(transport, request_time);
 		}
+
 	}
 
 	// Implement leave the road
@@ -127,36 +150,34 @@ species Road parent: RoadModelInterface {
 		ask road_model {
 			do leave(transport, request_time);
 		}
+
 	}
-	
-	// Implement get entry point in the road
-	point get_entry_point {
-		return road_model.get_entry_point();
+
+	// Add trasnport to waiting queue
+	action push_in_waiting_queue (Transport transport) {
+		ask road_model {
+			do push_in_waiting_queue(transport);
+		}
 	}
-	
-	// Implement get exit point in the road
-	point get_exit_point {
-		return road_model.get_exit_point();
+
+	// Implement true if this road has capacity
+	bool has_capacity (Transport transport) {
+		return road_model.has_capacity(transport);
 	}
-	
+
 	// Implement get size
 	float get_size {
 		return shape.perimeter;
 	}
-	
+
 	// Implement get max freeflow speed
 	float get_max_freeflow_speed (Transport transport) {
 		return min([transport.max_speed, max_speed]) #km / #h;
 	}
-	
+
 	// Implement get free flow travel time in secondes (time to cross the road when the speed of the transport is equals to the maximum speed)
 	float get_free_flow_travel_time (Transport transport) {
 		return get_size() / get_max_freeflow_speed(transport);
-	}
-
-	// Implement true if this road has capacity
-	bool has_capacity (float capacity) {
-		return current_capacity > capacity;
 	}
 
 	// Default aspect

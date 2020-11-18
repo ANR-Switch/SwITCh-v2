@@ -34,7 +34,7 @@ species Bike parent: PrivateTransport {
 		max_speed <- 20.0;
 		size <- 1.0;
 		max_passenger <- 1;
-		available_graph <- world.full_network;
+		network <- world.create_network(world.full_network);
 	}
 
 	// Default aspect

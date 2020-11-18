@@ -14,9 +14,5 @@ species EventManager control: event_manager {
 	int get_size {
 		return size;
 	}
-	
-	// Get size sorted by species
-	map get_size_by_species {
-		return size_by_agent;
-	}
+
 }

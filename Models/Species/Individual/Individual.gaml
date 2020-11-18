@@ -15,8 +15,6 @@ import "Agenda.gaml"
 
 /** 
  * Individuals species
- * 
- * TODO: if individuals have to die, don't forget to use clear_events before
  */
 species Individual skills: [scheduling] {
 
@@ -41,7 +39,7 @@ species Individual skills: [scheduling] {
 
 	// The home place
 	Building home_place <- nil;
-
+	
 	/**
 	 * Computation data
 	 */
@@ -51,7 +49,7 @@ species Individual skills: [scheduling] {
 
 	// The chain of trips from start to end location
 	queue<Trip> trip_chain;
-
+	
 	/**
 	 * Activity data
 	 */
@@ -92,15 +90,15 @@ species Individual skills: [scheduling] {
 
 	// Init trip chain
 	action push_init_trip (Trip first_trip) {
-		point current_target <- nil;
+		point pre_compute_target <- nil;
 		
 		// Pre compute and get entry location
 		ask first_trip {
-			current_target <- pre_compute(myself.location);
+			pre_compute_target <- pre_compute(myself.location);
 		}
 
 		// If the trip entry point is nil it's not normal behavior.
-		if current_target = nil {
+		if pre_compute_target = nil {
 			// Draw error and nothing more
 			write "---------------------------------------------------";
 			write "Impossible to enter into the graph, no entry point";
@@ -109,13 +107,18 @@ species Individual skills: [scheduling] {
 			write "---------------------------------------------------";
 		} else {
 			// Entry network
-			do push_trip(world.create_connexion_trip(self, current_target));
+			do push_trip(world.create_connexion_trip(self, pre_compute_target));
 		}
 
 	}
 	
+	// End trip chain
+	action push_end_trip (point target) {
+		do push_trip(world.create_connexion_trip(self, target));
+	}
+
 	// Clear trip
-	action die_trip {
+	action kill_trip {
 		if current_trip != nil {
 			ask current_trip {
 				do die;
@@ -123,20 +126,15 @@ species Individual skills: [scheduling] {
 		}
 	}
 
-	// End trip chain
-	action push_end_trip (point target) {
-		do push_trip(world.create_connexion_trip(self, target));
-	}
-
 	// Create transport trip 
 	// TODO distance is arbitrary, we must define a better strategy -> a model of decision making
 	action compute_trip_chain (Building target_building) {
 		// #################################
-		point target <- any_location_in(target_building.shape);
-		float distance <- location distance_to target; // TODO must be distance in the graph 
 		Transport transport <- nil;
+		point target <- any_location_in(target_building.shape);
 		
-		transport <- world.create_walk();
+		/*
+		float distance <- location distance_to target;
 		if false {
 			if not has_car and not has_bike {
 				transport <- world.create_walk();
@@ -161,10 +159,11 @@ species Individual skills: [scheduling] {
 					transport <- world.create_walk();
 				}
 			}
-		}
+		}*/
 		// #################################
 
 		// Create and add first (and the only one) trip
+		transport <- world.create_car();
 		Trip first_trip <- world.create_trip(transport, self, target);
 		do push_init_trip(first_trip);
 		do push_trip(first_trip);
@@ -177,7 +176,7 @@ species Individual skills: [scheduling] {
 		// Check if there is another trip
 		if has_trip() {
 			// Clean previous trip
-			do die_trip;
+			do kill_trip;
 			
 			// Execute next trip
 			current_trip <- pop_trip();
@@ -191,7 +190,7 @@ species Individual skills: [scheduling] {
 			location <- current_trip.target;
 	
 			// Clean last trip
-			do die_trip;
+			do kill_trip;
 		}
 	}
 

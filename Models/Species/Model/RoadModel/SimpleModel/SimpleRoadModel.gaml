@@ -15,6 +15,7 @@ global {
 	// Create a new road
 	SimpleRoadModel create_simple_road_model (Road simple_attached_road) { 
 		create SimpleRoadModel returns: values {
+			color <- #grey;
 			attached_road <- simple_attached_road;
 		}
 
@@ -42,6 +43,17 @@ species SimpleRoadModel parent: RoadModel {
 		add item: transport_list to: transports all: true;
 	}
 	
+	action add_transport(Transport transport) {
+		// Add the wrapped transport
+		add transport to: transports;
+	}
+
+	// Remove transport
+	action remove_tansport(Transport transport) {		
+		// Remove
+		remove transport from: transports;	
+	}
+	
 	// Clear transports
 	action clear_transports {
 		 loop transport over: transports {
@@ -52,37 +64,47 @@ species SimpleRoadModel parent: RoadModel {
 		 }
 		remove from: transports all: true;
 	}
+	
+	// The simple road is just a road without interference
+	bool has_capacity (Transport transport) {
+		return true;
+	}
 
 	// Implementation of join
 	action join (Transport transport, date request_time) {
-		add item: transport to: transports;
-		float travelTime <- attached_road.get_free_flow_travel_time(transport);
+		do add_transport(transport);		
+		
 		ask transport {
 			myself.attached_road.current_capacity <- myself.attached_road.current_capacity - size;
 		}
 
 		// Ask the transport to change road when the travel time is reached
+		float travel_time <- transport.compute_straight_forward_duration_trough_road(attached_road, transport.get_current_target());
 		ask transport {
-			do later the_action: change_road at: request_time + travelTime;
+			do update_positions(myself.attached_road.start_node.location);
 		}
+		do later the_action: end_road at: request_time + travel_time refer_to: transport;
 
 	}
+	
+	// Implement end
+	action end_road {
+		ask refer_to as Transport {
+			do update_positions(myself.attached_road.end_node.location);
+			do change_road(myself.event_date);			
+		}
+	}
 
-	// Implementation of leave
-	action leave (Transport transport, date request_time) {		
-		remove item: transport from: transports;
+	// Inner leave
+	action inner_leave(Transport transport, date request_time) {
+		do remove_tansport(transport); 
 		ask transport {
 			myself.attached_road.current_capacity <- myself.attached_road.current_capacity + size;
 		}
 	}
-	
-	// Implement of getEntryPoint
-	point get_entry_point {
-		return attached_road.start_node.location;
-	}
-	
-	// Implement of getExitPoint
-	point get_exit_point {
-		return attached_road.end_node.location;
+
+	// Implementation of leave
+	action leave (Transport transport, date request_time) {		
+		do inner_leave(transport, request_time); 
 	}
 }
