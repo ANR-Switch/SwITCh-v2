@@ -12,7 +12,7 @@ import "Transport.gaml"
  * Add to world the action to create a new trip
  */
 global {
-// Create a new trip
+	// Create a new trip
 	Trip create_trip (Transport trip_transport, Individual trip_individual, point trip_target) {
 		create Trip returns: trips {
 			transport <- trip_transport;
@@ -85,9 +85,9 @@ species Trip {
 		}
 
 		ask transport {
-		// Ask the transport to add this individual;
+			// Ask the transport to add this individual;
 			do get_in(myself.individual);
-			// And start moving
+			// And start moving			
 			do start(myself.origin, myself.target, start_time, myself);
 		}
 
@@ -110,8 +110,8 @@ species Trip {
 	// Setup trip
 	action setup {
 		// Set start and end point in the graph. Set the first intermediate target
-		start_location <- any_location_in(Road closest_to origin);
-		end_location <- any_location_in(Road closest_to target);
+		start_location <- ((Road closest_to origin).shape closest_points_with origin)[0];
+		end_location <- ((Road closest_to target).shape closest_points_with target)[0];
 		current_target <- first(transport.network.path_to_target).end_node.location;
 		transport.location <- start_location;
 	}

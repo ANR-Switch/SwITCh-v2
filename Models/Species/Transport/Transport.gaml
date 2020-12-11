@@ -17,11 +17,11 @@ import "../Individual/Individual.gaml"
  */
 species Transport virtual: true skills: [scheduling] {
 
-/**
+	/**
 	 * Transport data
 	 */
 
-// Travelers
+	// Travelers
 	list<Individual> passengers <- [];
 
 	// Maximum speed for a transport (km/h)
@@ -37,7 +37,7 @@ species Transport virtual: true skills: [scheduling] {
 	 * Computation data
 	 */
 
-// The event manager
+	// The event manager
 	agent event_manager <- EventManager[0];
 
 	// Current trip
@@ -72,8 +72,19 @@ species Transport virtual: true skills: [scheduling] {
 			ret <- pre_compute(from_location, to_location);
 		}
 
-		ask current_trip {
-			do setup();
+		if ret {
+			ask current_trip {
+				do setup();
+			}
+
+		} else {
+			// TODO it's not a good solution.
+			// The graph is not perfect and sometime,
+			// some buildings are not reachable
+			ask current_trip.individual {
+				do die();
+			}
+
 		}
 
 		return ret;
@@ -85,7 +96,7 @@ species Transport virtual: true skills: [scheduling] {
 
 	// Passenger get in the transport
 	bool get_in (Individual i) {
-		// Can't be more than the max capacity
+	// Can't be more than the max capacity
 		if (length(passengers) < max_passenger) {
 			add item: i to: passengers;
 			return true;
@@ -125,7 +136,7 @@ species Transport virtual: true skills: [scheduling] {
 			write "---------------------------------------------------";
 			do end(start_time);
 		} else {
-			do inner_change_road(get_current_road(), false, start_time);
+			do inner_change_road(get_current_road(), start_time);
 		}
 
 	}
@@ -137,7 +148,7 @@ species Transport virtual: true skills: [scheduling] {
 	 * Update position actions
 	 */
 
-// Redefine the position of all passengers and the transport itself
+	// Redefine the position of all passengers and the transport itself
 	action update_positions (point new_location) {
 		location <- new_location;
 		loop passenger over: passengers {
@@ -155,7 +166,7 @@ species Transport virtual: true skills: [scheduling] {
 	 * Road actions
 	 */
 
-// Check if there is a next road
+	// Check if there is a next road
 	bool has_next_road {
 		return length(network.path_to_target) > 1;
 	}
@@ -187,29 +198,32 @@ species Transport virtual: true skills: [scheduling] {
 
 	// Leave current road	
 	action leave_current_road (date request_time) {
-		Road r <- get_current_road();
-		if r != nil {
-			ask r {
-				do leave(myself, request_time);
+		if current_trip.current_road != nil {
+			Road road <- get_current_road();
+			if road != nil {
+				ask road {
+					do leave(myself, request_time);
+				}
+
+				remove first(network.path_to_target) from: network.path_to_target;
+				current_trip.is_waiting <- false;
 			}
 
-			remove first(network.path_to_target) from: network.path_to_target;
-			current_trip.is_waiting <- false;
 		}
 
 	}
-
+	
 	// Inner changer road
-	action inner_change_road (Road road, bool leave_current_road, date start_time) {
-	// Joined varaiable used to leave road if true
+	action inner_change_road (Road road, date start_time) {
+		// Joined varaiable used to leave road if true
 		bool joinable <- false;
+		
 		ask road {
-			joinable <- has_capacity(myself);
+			joinable <- has_capacity(myself) and not check_if_exists(myself);
 		}
 
 		if joinable {
 			current_trip.is_waiting <- false;
-			current_trip.current_road <- road;
 
 			// Set the current target depending if it's the last road or not
 			if it_is_last_road_changing() {
@@ -222,19 +236,17 @@ species Transport virtual: true skills: [scheduling] {
 				do join(myself, start_time);
 			}
 
-			if leave_current_road {
-				do leave_current_road(start_time);
-			}
-
+			do leave_current_road(start_time);
+			current_trip.current_road <- road;
 			current_trip.next_road <- get_next_road();
 		} else {
 			current_trip.is_waiting <- true;
-			current_trip.current_road <- get_current_road();
-			current_trip.next_road <- road;
+			
 			ask road {
-				do push_in_waiting_queue(myself);
+				do join(myself, start_time);
 			}
 
+			current_trip.next_road <- road;
 		}
 
 	}
@@ -242,12 +254,27 @@ species Transport virtual: true skills: [scheduling] {
 	// Change road signal
 	action change_road (date request_date) {
 		if has_next_road() {
-			do inner_change_road(get_next_road(), true, request_date);
+			do inner_change_road(get_next_road(), request_date);
 		} else {
 			do leave_current_road(request_date);
 			do end(request_date);
 		}
 
+	}
+	
+	// Get all transport of current and the next road
+	list<Transport> get_trip_transports {
+		list<Transport> current_transports <- [];
+		list<Transport> next_transports <- [];
+		
+		if current_trip.current_road != nil {
+			current_transports <- current_trip.current_road.road_model.get_transports();
+		}
+		if current_trip.next_road != nil {
+			//next_transports <- current_trip.next_road.road_model.get_transports();
+		}
+		
+		return current_transports + next_transports;
 	}
 
 	/**
@@ -259,6 +286,7 @@ species Transport virtual: true skills: [scheduling] {
 		if current_trip != nil and not dead(current_trip) {
 			return current_trip.current_target;
 		}
+
 		return nil;
 	}
 
@@ -273,7 +301,7 @@ species Transport virtual: true skills: [scheduling] {
 	}
 
 	// Compute straight forward duration: transport target in the given road
-	float compute_straight_forward_duration_trough_road (Road road, point target) {
+	float compute_straight_forward_duration_through_road (Road road, point target) {
 		return (location distance_to target) / road.get_max_freeflow_speed(self);
 	}
 

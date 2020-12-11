@@ -15,12 +15,40 @@ import "../Model/RoadModel/QueuedModel/MicroQueuedRoadModel.gaml"
 import "../Network/Road.gaml"
 import "../Network/Crossroad.gaml"
 
+/**
+ * Get end point of the current segment (for the given agent)
+ */
+global {
+ 	// Get end point of the current segment (for the given agent)
+	point get_end_point_road_segment(agent the_agent, Road the_road) {
+		point segment_end_point <- nil;
+		bool exec_loop <- true;
+		int i <- 0;
+		
+		loop while: exec_loop {
+			point p1 <- the_road.shape.points[i];
+			segment_end_point <- the_road.shape.points[i + 1];
+			
+			if rectangle(p1, segment_end_point) overlaps the_agent.location {
+				exec_loop <- false;
+			}
+			
+			i <- i + 1;
+			if i >= length(the_road.shape.points) - 1 {
+				exec_loop <- false;
+			}
+		}
+
+		return segment_end_point;
+	}
+}
+
 /** 
  * Road virtual species
  */
 species Road parent: IRoad {
 
-// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
+	// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
 	string type;
 
 	// Is part of roundabout or not (OSM information)
@@ -82,10 +110,14 @@ species Road parent: IRoad {
 
 	// Init the road
 	init {
-	// Set start and end crossroads
-		start_node <- Crossroad(first(self.shape.points));
-		end_node <- Crossroad(last(self.shape.points));
+		//location <- location with_precision 4;
+		//shape.points[0] <- first(self.shape.points) with_precision 4;
+		//shape.points[length(shape.points) - 1] <- last(self.shape.points) with_precision 4;
 
+		// Set start and end crossroad
+		start_node <- Crossroad closest_to first(self.shape.points);
+		end_node <- Crossroad closest_to last(self.shape.points);
+		
 		// TODO *********** 
 		/*switch model_type {
 			match "simple" {
@@ -104,16 +136,21 @@ species Road parent: IRoad {
 		*/
 		switch type {
 			match "residential" {
-			//road_model <- world.create_micro_queue_road_model(self);
-				road_model <- world.create_simple_queue_road_model(self);
+				road_model <- world.create_micro_queue_road_model(self);
+				//road_model <- world.create_micro_road_model(self);
+				//road_model <- world.create_simple_road_model(self);
+				//road_model <- world.create_simple_queue_road_model(self);				
 			}
 
 			default {
-			//road_model <- world.create_micro_queue_road_model(self);
-				road_model <- world.create_simple_queue_road_model(self);
+				road_model <- world.create_micro_queue_road_model(self);
+				//road_model <- world.create_micro_road_model(self);
+				//road_model <- world.create_simple_road_model(self);
+				//road_model <- world.create_simple_queue_road_model(self);
 			}
 
 		}
+		//road_model <- world.create_simple_road_model(self);
 		// ***********
 
 		// Set border color
@@ -122,6 +159,8 @@ species Road parent: IRoad {
 		// Get translations (in order to draw two roads if there is two directions)
 		point A <- start_node.location;
 		point B <- end_node.location;
+		
+	
 		if (A = B) {
 			trans <- {0, 0};
 		} else {
@@ -153,16 +192,14 @@ species Road parent: IRoad {
 
 	}
 
-	// Add trasnport to waiting queue
-	action push_in_waiting_queue (Transport transport) {
-		ask road_model {
-			do push_in_waiting_queue(transport);
-		}
-	}
-
 	// Implement true if this road has capacity
 	bool has_capacity (Transport transport) {
 		return road_model.has_capacity(transport);
+	}
+	
+	// Implement true if this road has capacity
+	bool check_if_exists (Transport transport) {
+		return road_model.check_if_exists(transport);
 	}
 
 	// Implement get size

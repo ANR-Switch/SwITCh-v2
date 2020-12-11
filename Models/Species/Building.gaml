@@ -46,7 +46,9 @@ species Building {
 	
 	// Default aspect
 	aspect default {
-		draw shape color: (type in blg_colors.keys) ? blg_colors[type] : blg_color_default border: #black;
+		rgb current_color <- (type in blg_colors.keys) ? blg_colors[type] : blg_color_default ;
+		draw shape color: current_color width: 1 border: #black;
+		//draw shape border: current_color color: current_color width: 2;
 	}
 
 }

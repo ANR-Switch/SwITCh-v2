@@ -13,14 +13,14 @@ import "../../Transport/Transport.gaml"
  */
 global {
 
-	// Create transport wrapper
+// Create transport wrapper
 	TransportMovingWrapper create_transport_moving_wrapper (Transport transport_to_wrap, RoadModel road_model) {
 		create TransportMovingWrapper returns: values {
 			current_road <- road_model;
 			wrapped <- transport_to_wrap;
 			location <- transport_to_wrap.location;
 			desired_speed <- road_model.attached_road.get_max_freeflow_speed(transport_to_wrap);
-			speed <- desired_speed / 2.0;
+			speed <- desired_speed;
 			target <- transport_to_wrap.current_trip.current_target;
 		}
 
@@ -33,17 +33,17 @@ global {
  * Transport moving species
  */
 species TransportMovingWrapper skills: [moving] {
-	// The road
+// The road
 	RoadModel current_road;
 
 	// The wrapped transport
 	Transport wrapped;
 
 	// Internal time step
-	float time_step <- min(0.1, step);
+	float time_step <- min(0.1, step) #second;
 
 	// Number of steps
-	float step_count <- step / time_step;
+	float step_count_max <- step / time_step;
 
 	// Car target (is it depends of "right" variable)
 	point target;
@@ -68,10 +68,9 @@ species TransportMovingWrapper skills: [moving] {
 
 	// Reactivity
 	float reactivity <- 3.0;
-	
+
 	// Inner move
 	action inner_move {
-
 		// Compute acceleration speed (Linear)
 		acc <- (reactivity / reaction_time) * (desired_speed - speed);
 
@@ -86,38 +85,50 @@ species TransportMovingWrapper skills: [moving] {
 		speed <- speed + (acc * time_step);
 
 		// Move skill
-		do goto on: wrapped.network.available_graph target: target speed: speed;
+		do goto on: wrapped.network.available_graph target: target speed: (speed / step_count_max);
 	}
 
-	// Moving
-	reflex moving {
+	// One step
+	action one_step_moving (float nb_step, date request_date) {
 		bool exec_loop <- true;
 		int nb_loop <- 0;
 		loop while: exec_loop {
 			// Get distance and direction
 			distance <- location distance_to target;
-			if distance = 0 {
+			if distance <= 0 {
 				exec_loop <- false;
 			} else {
 				do inner_move();
 				nb_loop <- nb_loop + 1;
-				exec_loop <- (nb_loop < step_count);
+				exec_loop <- (nb_loop < nb_step);
 			}
 
 		}
-			
+
 		// Set position
 		ask wrapped {
 			do update_positions(myself.location);
 		}
 
 		// Change road
-		if distance = 0 {
+		if distance <= 0 {
 			ask current_road {
-				do later the_action: end_road refer_to: myself.wrapped;
+				do later the_action: end_road at: request_date + (myself.time_step * nb_loop) refer_to: myself.wrapped;
 			}
+
 			do die;
 		}
 
 	}
+
+	// Moving force 
+	action moving (float delta_cycle, date request_date) {
+		do one_step_moving(step_count_max * delta_cycle, request_date);
+	}
+
+	// Moving relfex
+	reflex moving_cyclic {
+		do one_step_moving(step_count_max, (starting_date + time));
+	}
+
 }

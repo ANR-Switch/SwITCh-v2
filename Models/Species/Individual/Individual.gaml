@@ -39,7 +39,13 @@ species Individual skills: [scheduling] {
 
 	// The home place
 	Building home_place <- nil;
-	
+
+	// The working place id
+	int working_place_id;
+
+	// The home place id
+	int home_place_id;
+
 	/**
 	 * Computation data
 	 */
@@ -49,7 +55,7 @@ species Individual skills: [scheduling] {
 
 	// The chain of trips from start to end location
 	queue<Trip> trip_chain;
-	
+
 	/**
 	 * Activity data
 	 */
@@ -91,7 +97,7 @@ species Individual skills: [scheduling] {
 	// Init trip chain
 	action push_init_trip (Trip first_trip) {
 		point pre_compute_target <- nil;
-		
+
 		// Pre compute and get entry location
 		ask first_trip {
 			pre_compute_target <- pre_compute(myself.location);
@@ -111,7 +117,7 @@ species Individual skills: [scheduling] {
 		}
 
 	}
-	
+
 	// End trip chain
 	action push_end_trip (point target) {
 		do push_trip(world.create_connexion_trip(self, target));
@@ -123,7 +129,9 @@ species Individual skills: [scheduling] {
 			ask current_trip {
 				do die;
 			}
+
 		}
+
 	}
 
 	// Create transport trip 
@@ -132,7 +140,7 @@ species Individual skills: [scheduling] {
 		// #################################
 		Transport transport <- nil;
 		point target <- any_location_in(target_building.shape);
-		
+
 		/*
 		float distance <- location distance_to target;
 		if false {
@@ -172,26 +180,27 @@ species Individual skills: [scheduling] {
 
 	// Execute one trip of the chain
 	action execute_trip_chain (date start_time) {
-
 		// Check if there is another trip
 		if has_trip() {
 			// Clean previous trip
 			do kill_trip;
-			
+
 			// Execute next trip
 			current_trip <- pop_trip();
-			
+
 			// Start the current trip
 			ask current_trip {
 				do start(myself.location, start_time);
 			}
+
 		} else {
 			// Set location and reset current target
 			location <- current_trip.target;
-	
+
 			// Clean last trip
 			do kill_trip;
 		}
+
 	}
 
 	/**
@@ -214,7 +223,7 @@ species Individual skills: [scheduling] {
 		// Compute and execute first trip
 		do compute_trip_chain(target);
 		do execute_trip_chain(start_time);
-	}	
+	}
 
 	/**
 	 * Activity behaviors (scheduling)
@@ -237,17 +246,18 @@ species Individual skills: [scheduling] {
 		}
 
 	}
-	
+
 	/**
 	 * Unitilities
 	 */
-	 
+
 	// Get current target
 	point get_target {
 		// Get target of the current trip
 		if current_trip != nil {
-			return current_trip.target;		
+			return current_trip.target;
 		}
+
 		return nil;
 	}
 
@@ -258,5 +268,6 @@ species Individual skills: [scheduling] {
 	// Default aspect
 	aspect default {
 		draw circle(3) color: #brown border: #black;
-	} 
+	}
+
 }

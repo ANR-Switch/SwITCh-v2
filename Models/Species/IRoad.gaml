@@ -19,9 +19,6 @@ species IRoad virtual: true {
 	// Virtual leave the road
 	action leave (Transport transport, date request_time) virtual: true;
 	
-	// Virtual push in waiting queue
-	action push_in_waiting_queue (Transport transport) virtual: true;
-
 	// Virtual get size
 	float get_size virtual: true;
 	
@@ -33,4 +30,8 @@ species IRoad virtual: true {
 	
 	// Virtual get true if this road has capacity
 	bool has_capacity (Transport transport) virtual: true;
+
+	// Check if exists
+	bool check_if_exists (Transport transport) virtual: true;
+	
 }

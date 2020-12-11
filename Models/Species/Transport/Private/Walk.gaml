@@ -55,6 +55,7 @@ species Walk parent: PrivateTransport {
 	action start (point start_location, point end_location, date start_time, Trip trip) {
 		current_trip <- trip;
 		is_visible <- true;
+				
 		if is_connexion {
 			// Start connexion
 			do connexion(start_time);

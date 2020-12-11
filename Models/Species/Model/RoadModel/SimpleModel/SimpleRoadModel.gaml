@@ -25,6 +25,7 @@ global {
 
 /** 
  * Simple road species
+ * Simple road are not realistic roads, there is no interactions, no priority and no capacity check
  * 
  * Implement Road species
  */
@@ -49,7 +50,7 @@ species SimpleRoadModel parent: RoadModel {
 	}
 
 	// Remove transport
-	action remove_tansport(Transport transport) {		
+	action remove_transport(Transport transport) {		
 		// Remove
 		remove transport from: transports;	
 	}
@@ -79,7 +80,7 @@ species SimpleRoadModel parent: RoadModel {
 		}
 
 		// Ask the transport to change road when the travel time is reached
-		float travel_time <- transport.compute_straight_forward_duration_trough_road(attached_road, transport.get_current_target());
+		float travel_time <- transport.compute_straight_forward_duration_through_road(attached_road, transport.get_current_target());
 		ask transport {
 			do update_positions(myself.attached_road.start_node.location);
 		}
@@ -94,17 +95,18 @@ species SimpleRoadModel parent: RoadModel {
 			do change_road(myself.event_date);			
 		}
 	}
-
-	// Inner leave
-	action inner_leave(Transport transport, date request_time) {
-		do remove_tansport(transport); 
-		ask transport {
-			myself.attached_road.current_capacity <- myself.attached_road.current_capacity + size;
-		}
-	}
-
+	
 	// Implementation of leave
 	action leave (Transport transport, date request_time) {		
-		do inner_leave(transport, request_time); 
+		do remove_transport(transport); 
+		ask transport {
+			myself.attached_road.current_capacity <- myself.attached_road.current_capacity + size;
+		}	
+	}
+	
+	// True if already in the road
+	bool check_if_exists(Transport transport) {
+		list<Transport> tmp <- (transports) where(each = transport);	
+		return length(tmp) > 0;
 	}
 }

@@ -1,4 +1,9 @@
 {
     "datasets_root" : "../../Tools/Datasets/",
-    "dataset" : "Castanet Tolosan/CASTANET-CROP"
+    "dataset-bordeaux-crop" : "Bordeaux/BORDEAUX-CROP",
+    "dataset-castanet" : "Castanet Tolosan/CASTANET-TOLOSAN-2",
+    "dataset-castanet-crop" : "Castanet Tolosan/CASTANET-CROP",
+    "":"CASTANET-TOLOSAN-CROPPED-LINE",
+
+    "dataset" : "Castanet Tolosan/CASTANET-TOLOSAN-CROPPED"
 }

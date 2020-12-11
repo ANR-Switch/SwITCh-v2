@@ -20,6 +20,13 @@ species Crossroad {
 	// Subarea (if the world is composed of several areas)
 	list<string> sub_areas;
 	
+	// Waiting time
+	float waiting_time <- rnd(10)#second;
+	
+	init {
+		//location <- location with_precision 4;
+	}
+	
 	// Default aspect
 	aspect default {
 		draw circle(3) color: #grey border: #black;
