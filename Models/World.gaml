@@ -23,7 +23,8 @@ global {
 
 	// Starting date of the simulation 
 	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
-	float step <- 0.1 #second;
+	float step <- 0.1#seconds;
+	float seed <- 424242.0;
 
 	// Get general configuration
 	file config <- json_file("../Parameters/Config.json");
@@ -41,7 +42,7 @@ global {
 
 	// Graph configuration
 	string optimizer_type <- "NBAStar" among: ["NBAStar", "NBAStarApprox", "Dijkstra", "AStar", "BellmannFord", "FloydWarshall"];
-	bool memorize_shortest_paths <- true; //true by default
+	bool memorize_shortest_paths <- true; // True by default
 
 	// Change the geometry of the world
 	geometry shape <- envelope(shape_boundary);
@@ -52,8 +53,9 @@ global {
 	// Init the model
 	init {
 		// Only one event manager
-		write "Event Manager...";
+		write "Utilities...";
 		create EventManager;
+		create Logbook;
 		write "-> " + (starting_date + (machine_time / 1000));
 
 		// Create nodes (must be defined before roads in order to build the road with two crossroads) TODO OSM data ?
@@ -67,6 +69,23 @@ global {
 		[type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")];
 		write "-> " + (starting_date + (machine_time / 1000));
 
+		write "Graph...";
+		// Get networks		
+		full_network <- as_driving_graph(Road, Crossroad);
+
+		//allows to choose the type of algorithm to use compute the shortest paths
+		full_network <- full_network with_optimizer_type optimizer_type;
+
+		//allows to define if the shortest paths computed should be memorized (in a cache) or not
+		full_network <- full_network use_cache memorize_shortest_paths;
+		
+		// Setup the graphique representation
+		ask Road {
+			do setup();
+		}
+		
+		write "-> " + (starting_date + (machine_time / 1000));
+
 		// Create buildings from database (must be defined before individuals in order to build the individual with home place and working place)
 		write "Building...";
 		create Building from: shape_buildings with: [id::int(read("id")), type:: read("type")];
@@ -75,7 +94,6 @@ global {
 		// Create individuals from database
 		write "Individual...";
 		create Individual from: shape_individuals with: [age::int(read("age")), working_place_id::int(read("work_pl")), home_place_id::int(read("home_pl"))];		
-			
 		
 		write "-> " + (starting_date + (machine_time / 1000));
 
@@ -86,12 +104,12 @@ global {
 			file fake_agenda_json <- json_file("../Parameters/Agendas.json");
 			map<string, list<map<string, unknown>>> fake_agenda_data <- fake_agenda_json.contents;
 			
-			
 			// Get building of each types (ONCE)
 			list<Building> study_building <- Building where (each.type = "studying");
 			list<Building> work_building <- Building where (each.type = "working");
 			list<Building> home_building <- Building where (each.type = "staying_home");
 			
+			int i <- 0;
 			loop activity over: list<map<string, unknown>>(fake_agenda_data["metro_boulot_dodo"]) {
 				date act_starting_time <- starting_date + int(activity["starting_date"]);
 				int act_type <- int(activity["activity_type"]);
@@ -100,12 +118,12 @@ global {
 				Activity a <- create_activity(act_starting_time, act_type);
 				ask Individual {
 					int random <- rnd(0, 100);
-					/*if (random <= 85) {
-						has_car <- true;
-						has_bike <- true;	
-					}
+					//if (random <= 85) {
+					//	has_car <- true;
+					//	has_bike <- true;	
+					//}
 	
-					if (random <= 24) {
+					/*if (random <= 24) {
 						a.start_date <- act_starting_time + (1800 * 0 + (1800 * rnd(0, 100) / 100));
 					} else if (random <= 50) {
 						a.start_date <- act_starting_time + (1800 * 1 + (1800 * rnd(0, 100) / 100));
@@ -116,6 +134,9 @@ global {
 					} else if (random <= 100) {
 						a.start_date <- act_starting_time + (1800 * 4 + (1800 * rnd(0, 100) / 100));
 					}*/
+					
+					a.start_date <- act_starting_time + (1800 * (i / length(Individual)));
+					i <- i + 1;
 					
 					// If working ID exists
 					/*if working_place_id != nil and working_place_id >= 0 {
@@ -141,9 +162,6 @@ global {
 					//if home_place = nil {
 						home_place <- one_of(home_building);
 					//}
-					
-					
-					
 					
 					location <- any_location_in(home_place.shape);
 					
@@ -180,18 +198,8 @@ global {
 	
 			}
 		}
-		// ############################ WARNING WARNING WIP IN PROGRESS TEST 
 		write "-> " + (starting_date + (machine_time / 1000));
-		
-		write "Graph...";
-		// Get networks		
-		full_network <- directed(as_edge_graph(Road, Crossroad));
-
-		//allows to choose the type of algorithm to use compute the shortest paths
-		full_network <- full_network with_optimizer_type optimizer_type;
-
-		//allows to define if the shortest paths computed should be memorized (in a cache) or not
-		full_network <- full_network use_cache memorize_shortest_paths;
+		// ############################ WARNING WARNING WIP IN PROGRESS TEST 
 		
 		// TODO ???????? wtf because Agents are not scheduled
 		create TransportMovingWrapper {
@@ -199,6 +207,10 @@ global {
 		}
 		
 		create TransportMovingLinearGippsWrapper {
+			do die;
+		}
+		
+		create TransportMovingLinearGippsEventWrapper {
 			do die;
 		}
 
@@ -212,9 +224,7 @@ global {
 
 		create Bike {
 			do die;
-		}
-		write "-> " + (starting_date + (machine_time / 1000));
-
+		}		
 	}
 
 }
@@ -234,6 +244,7 @@ experiment "SwITCh" type: gui {
 			species Individual;
 			
 			species TransportMovingLinearGippsWrapper;
+			species TransportMovingLinearGippsEventWrapper;
 		}
 
 	}

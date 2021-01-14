@@ -87,7 +87,7 @@ species Trip {
 		ask transport {
 			// Ask the transport to add this individual;
 			do get_in(myself.individual);
-			// And start moving			
+			// And start moving
 			do start(myself.origin, myself.target, start_time, myself);
 		}
 
@@ -112,7 +112,7 @@ species Trip {
 		// Set start and end point in the graph. Set the first intermediate target
 		start_location <- ((Road closest_to origin).shape closest_points_with origin)[0];
 		end_location <- ((Road closest_to target).shape closest_points_with target)[0];
-		current_target <- first(transport.network.path_to_target).end_node.location;
+		current_target <- last(first(transport.network.path_to_target).shape.points);
 		transport.location <- start_location;
 	}
 

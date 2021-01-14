@@ -2,8 +2,9 @@
     "datasets_root" : "../../Tools/Datasets/",
     "dataset-bordeaux-crop" : "Bordeaux/BORDEAUX-CROP",
     "dataset-castanet" : "Castanet Tolosan/CASTANET-TOLOSAN-2",
-    "dataset-castanet-crop" : "Castanet Tolosan/CASTANET-CROP",
-    "":"CASTANET-TOLOSAN-CROPPED-LINE",
+    "dataset-castanet-crop" : "Castanet Tolosan/CASTANET-TOLOSAN-CROPPED",
+    "1":"CASTANET-TOLOSAN-CROPPED-LINE",
+    "2":"CASTANET-TOLOSAN-CROPPED",
 
-    "dataset" : "Castanet Tolosan/CASTANET-TOLOSAN-CROPPED"
+    "dataset" : "Bordeaux/BORDEAUX-CROP"
 }

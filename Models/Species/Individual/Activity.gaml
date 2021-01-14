@@ -51,6 +51,7 @@ species Activity {
 				}
 
 				match "work" {
+					//write (starting_date + time) milliseconds_between myself.start_date;
 					do later the_action: work at: myself.start_date refer_to: myself;
 				}
 

@@ -1,5 +1,5 @@
 /**
-* Name: Event_Manager
+* Name: EventManager
 * Event manager used by many species.
 * Author: Jean-François Erdelyi 
 * Tags: 

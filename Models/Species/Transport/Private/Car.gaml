@@ -28,12 +28,13 @@ global {
  * Implement PrivateTransport (and Transport) species
  */
 species Car parent: PrivateTransport {
-	geometry shape <- square(8);
+	geometry default_shape <- rectangle(4.13, 1.5);
+	geometry shape <- default_shape;
 
 	// Init speed, size and capacity
 	init {
 		max_speed <- 130.0;
-		size <- 4.13; // Argus average size in meters
+		size <- 5.13; // Argus average size in meters
 		max_passenger <- 5;
 		network <- world.create_network(world.full_network);
 	}

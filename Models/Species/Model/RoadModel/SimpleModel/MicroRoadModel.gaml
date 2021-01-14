@@ -95,7 +95,7 @@ species MicroRoadModel parent: RoadModel {
 	}
 
 	// Implementation of join
-	action join (Transport transport, date request_time) {
+	action join (Transport transport, date request_time, bool waiting) {
 		float entry_time <- 0.0;
 		if transport.current_trip.current_road != nil {
 			entry_time <- attached_road.start_node.waiting_time;
@@ -124,6 +124,11 @@ species MicroRoadModel parent: RoadModel {
 			do change_road(myself.event_date);
 		}
 
+	}
+	
+	// Nothing
+	action step {
+		
 	}
 
 	// Capacity

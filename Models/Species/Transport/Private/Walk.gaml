@@ -73,6 +73,9 @@ species Walk parent: PrivateTransport {
 		location <- passengers[0].location;
 		current_trip.current_target <- passengers[0].get_target();
 		date connexion_date <- start_time + compute_straight_forward_duration(current_trip.current_target);
+		
+		/*write "1 " + start_time milliseconds_between (starting_date + time);
+		write "2 " + start_time milliseconds_between connexion_date;*/
 
 		// Do the normal behavior after straight forward duration
 		do later the_action: connexion_network at: connexion_date;
@@ -81,6 +84,8 @@ species Walk parent: PrivateTransport {
 	// Super end (PrivateNetwork) wrapper
 	action connexion_network {
 		do update_positions(current_trip.current_target);
+		
+		//write " CONN " + event_date milliseconds_between (starting_date + time);
 		return super.end(event_date);
 	}
 
@@ -91,7 +96,7 @@ species Walk parent: PrivateTransport {
 	// Default aspect
 	aspect default {
 		if is_visible {
-			draw square(8) color: #green border: #black;
+			//draw square(1.5) color: #green border: #black;
 		}
 
 	}

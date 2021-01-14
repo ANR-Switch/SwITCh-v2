@@ -72,7 +72,7 @@ species SimpleRoadModel parent: RoadModel {
 	}
 
 	// Implementation of join
-	action join (Transport transport, date request_time) {
+	action join (Transport transport, date request_time, bool waiting) {
 		do add_transport(transport);		
 		
 		ask transport {
@@ -91,9 +91,14 @@ species SimpleRoadModel parent: RoadModel {
 	// Implement end
 	action end_road {
 		ask refer_to as Transport {
-			do update_positions(myself.attached_road.end_node.location);
+			do update_positions(last(myself.attached_road.shape.points));
 			do change_road(myself.event_date);			
 		}
+	}
+	
+	// Nothing
+	action step {
+		
 	}
 	
 	// Implementation of leave

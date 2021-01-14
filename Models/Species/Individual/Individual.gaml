@@ -16,7 +16,7 @@ import "Agenda.gaml"
 /** 
  * Individuals species
  */
-species Individual skills: [scheduling] {
+species Individual skills: [scheduling/*, logging*/] {
 
 	/**
 	 * Personnal data
@@ -52,6 +52,9 @@ species Individual skills: [scheduling] {
 
 	// The event manager
 	agent event_manager <- EventManager[0];
+	
+	// Logbook
+	//agent logbook <- Logbook[0];
 
 	// The chain of trips from start to end location
 	queue<Trip> trip_chain;
@@ -199,6 +202,9 @@ species Individual skills: [scheduling] {
 
 			// Clean last trip
 			do kill_trip;
+			
+			// End activity time
+			//do log_plot_2d agent_name: name date: starting_date + time data_name: "travel" x: "end" y: string(starting_date + time);
 		}
 
 	}
@@ -221,8 +227,10 @@ species Individual skills: [scheduling] {
 		current_activity <- activity;
 
 		// Compute and execute first trip
-		do compute_trip_chain(target);
+		do compute_trip_chain(target);		
 		do execute_trip_chain(start_time);
+		// Start activity time
+		//do log_plot_2d agent_name: name date: starting_date + time data_name: "travel" x: "start" y: string(starting_date + time);
 	}
 
 	/**
@@ -248,7 +256,7 @@ species Individual skills: [scheduling] {
 	}
 
 	/**
-	 * Unitilities
+	 * Utilities
 	 */
 
 	// Get current target
@@ -267,7 +275,7 @@ species Individual skills: [scheduling] {
 
 	// Default aspect
 	aspect default {
-		draw circle(3) color: #brown border: #black;
+		draw circle(0.5) color: #brown border: #black;
 	}
 
 }

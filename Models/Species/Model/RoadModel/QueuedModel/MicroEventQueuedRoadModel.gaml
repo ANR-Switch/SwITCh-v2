@@ -1,5 +1,5 @@
 /**
-* Name: MicroRoadModel
+* Name: MicroEventRoadModel
 * Implementation of micro road. 
 * Author: Jean-François Erdelyi
 * Tags: 
@@ -7,15 +7,16 @@
 model SwITCh
 
 import "../RoadModel.gaml"
-import "../../Transport/TransportMovingLinearGippsWrapper.gaml"
+import "../../Transport/TransportMovingWrapper.gaml"
+import "../../Transport/TransportMovingLinearGippsEventWrapper.gaml"
 
 /** 
  * Add to world the action to create a new road
  */
 global {
 	// Create a new road
-	MicroQueuedRoadModel create_micro_queue_road_model (Road micro_attached_road) {
-		create MicroQueuedRoadModel returns: values {
+	MicroEventQueuedRoadModel create_micro_event_queue_road_model (Road micro_attached_road) {
+		create MicroEventQueuedRoadModel returns: values {
 			color <- #blue;
 			attached_road <- micro_attached_road;
 		}
@@ -31,9 +32,9 @@ global {
  * 
  * Implement Road species
  */
-species MicroQueuedRoadModel parent: RoadModel {
+species MicroEventQueuedRoadModel parent: RoadModel {
 	// The list of transport in this road
-	map<Transport, TransportMovingLinearGippsWrapper> transports_wraps;
+	map<Transport, TransportMovingLinearGippsEventWrapper> transports_wraps;
 	list<Transport> transports;
 	
 	// Waiting queue
@@ -65,7 +66,7 @@ species MicroQueuedRoadModel parent: RoadModel {
 	// Add transport
 	action add_transport (Transport transport) {		
 		// Create wrap
-		TransportMovingLinearGippsWrapper wrap <- world.create_transport_moving_linear_gipps_wrapper(transport, transports_wraps closest_to transport, self);
+		TransportMovingLinearGippsEventWrapper wrap <- world.create_transport_moving_linear_gipps_event_wrapper(transport, transports_wraps closest_to transport, self);
 
 		// Add the wrapped transport
 		add transport to: transports;
@@ -88,7 +89,7 @@ species MicroQueuedRoadModel parent: RoadModel {
 	// Remove transport
 	action remove_transport (Transport transport) {		
 		// Get wrap
-		TransportMovingLinearGippsWrapper wrap <- transports_wraps[transport];
+		TransportMovingLinearGippsEventWrapper wrap <- transports_wraps[transport];
 		if not dead(wrap) {
 			// Die wrapper	
 			ask wrap {
@@ -147,7 +148,7 @@ species MicroQueuedRoadModel parent: RoadModel {
 		// -------
 	
 		//do later the_action: exit at: event_date + entry_time refer_to: transport;
-		do later the_action: exit at: (starting_date + time) refer_to: transport;
+		do later the_action: exit at: event_date refer_to: transport;
 	}
 
 	// Capacity

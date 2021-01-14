@@ -113,7 +113,7 @@ species TransportMovingWrapper skills: [moving] {
 		// Change road
 		if distance <= 0 {
 			ask current_road {
-				do later the_action: end_road at: request_date + (myself.time_step * nb_loop) refer_to: myself.wrapped;
+				do later the_action: end_road at: request_date + myself.time_step * nb_loop refer_to: myself.wrapped;
 			}
 
 			do die;

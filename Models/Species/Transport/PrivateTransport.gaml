@@ -15,7 +15,7 @@ import "Transport.gaml"
 species PrivateTransport parent: Transport virtual: true {
 
 	// Implementation of end
-	action end (date arrived_time) {
+	action end (date arrived_time) {		
 		is_visible <- false;
 		
 		// For each passenger execute next trip

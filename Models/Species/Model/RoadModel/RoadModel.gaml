@@ -23,7 +23,7 @@ species RoadModel virtual: true parent: IRoad skills: [scheduling] {
 	Road attached_road <- nil;
 
 	// Virtual join the road
-	action join (Transport transport, date request_time) virtual: true;
+	action join (Transport transport, date request_time, bool waiting) virtual: true;
 
 	// Virtual end 
 	action end_road virtual: true;
@@ -56,15 +56,20 @@ species RoadModel virtual: true parent: IRoad skills: [scheduling] {
 	float get_size {
 		return attached_road.get_size();
 	}
-
-	// Get max freeflow speed
+	
+	// Implement get max freeflow speed
 	float get_max_freeflow_speed (Transport transport) {
-		return attached_road.get_max_freeflow_speed(transport);
+		return min([transport.max_speed, attached_road.max_speed]) #km / #h;
+	}
+	
+	// Compute the travel of incoming transports
+	float get_road_travel_time (Transport transport, float distance_to_target) {
+		return get_free_flow_travel_time(transport, distance_to_target) with_precision 3;
 	}
 
 	// Get free flow travel time in secondes (time to cross the road when the speed of the transport is equals to the maximum speed)
-	float get_free_flow_travel_time (Transport transport) {
-		return attached_road.get_free_flow_travel_time(transport);
+	float get_free_flow_travel_time (Transport transport, float distance_to_target) {
+		return attached_road.get_free_flow_travel_time(transport, distance_to_target);
 	}
 
 }
