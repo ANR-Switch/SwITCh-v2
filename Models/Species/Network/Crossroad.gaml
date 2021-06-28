@@ -6,6 +6,8 @@
 */
 model SwITCh
 
+import "../Transport/Transport.gaml"
+
 /** 
  * Crossroad species
  */
@@ -22,9 +24,10 @@ species Crossroad {
 	
 	// Waiting time
 	float waiting_time <- 0.0;//rnd(10)#second;
-	
-	init {
-		//location <- location with_precision 4;
+		
+	// For now just the presence or not of transports
+	bool is_available {
+		return length(Transport where (circle(3) overlaps each)) <= 0;
 	}
 	
 	// Default aspect

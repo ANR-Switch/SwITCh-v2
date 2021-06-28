@@ -8,6 +8,7 @@ model SwITCh
 
 import "../../Utilities/EventManager.gaml"
 import "../../Utilities/Logbook.gaml"
+import "../Model/Transport/TransportModel.gaml"
 import "../Network/Network.gaml"
 import "../Individual/Individual.gaml"
 
@@ -41,6 +42,9 @@ species Transport virtual: true skills: [scheduling, logging] {
 	 * Computation data
 	 */
 
+	// Transport model (can be nil if there is not specific model)
+	TransportModel transport_model;
+
 	// The event manager
 	agent event_manager <- EventManager[0];
 	
@@ -70,6 +74,9 @@ species Transport virtual: true skills: [scheduling, logging] {
 	
 	// Entry timestamp
 	date entry_exec_time;
+	
+	// Last remaining duration 
+	float remaining_duration <- 0.0;
 
 	/**
 	 * Compute path actions
@@ -104,6 +111,7 @@ species Transport virtual: true skills: [scheduling, logging] {
 			// The graph is not perfect and sometime,
 			// some buildings are not reachable
 			ask current_trip.individual {
+				write "caca";
 				do die();
 			}
 
@@ -143,7 +151,6 @@ species Transport virtual: true skills: [scheduling, logging] {
 		is_visible <- true;
 		entry_time <- start_time;
 		entry_exec_time <- (starting_date + (machine_time / 1000));
-	 	//do later the_action: log_data at: start_time;
 		do start_standard(start_location, end_location, start_time);
 	}
 
@@ -184,7 +191,7 @@ species Transport virtual: true skills: [scheduling, logging] {
 
 	// Set position to the end of the current road
 	action update_end_positions {
-		do update_positions(last(get_current_road().shape.points));
+		do update_positions(get_current_road().end);
 	}
 
 	/**
@@ -221,28 +228,20 @@ species Transport virtual: true skills: [scheduling, logging] {
 	
 	action log_data {
 		if current_trip!= nil and current_trip.current_road != nil {
-			graph sub_graph <- as_edge_graph([current_trip.current_road], [first(current_trip.current_road.shape.points), last(current_trip.current_road.shape.points)]);
+			graph sub_graph <- as_edge_graph([current_trip.current_road], [current_trip.current_road.start, current_trip.current_road.end]);
 						
 			//float road_dist <- current_trip.current_road.start_node distance_to current_trip.current_road.end_node;
-			float road_dist <- topology(sub_graph) distance_between [first(current_trip.current_road.shape.points), last(current_trip.current_road.shape.points)];
+			float road_dist <- topology(sub_graph) distance_between [current_trip.current_road.start, current_trip.current_road.end];
 			//float dist <- (location distance_to current_trip.current_road.end_node) / road_dist;
-			float dist <- topology(sub_graph) distance_between [location, last(current_trip.current_road.shape.points)];
-			
-			//write road_dist;
-			//write location;
-			//write current_trip.current_road.end_node.location;
-			//write topology(network.available_graph) distance_between [location, current_trip.current_road.end_node];
-			//write "->" + dist;
-			
-			do log_plot_2d agent_name: name date: event_date data_name: "time-distance:" + current_trip.current_road.name x: string(abs(starting_date milliseconds_between event_date) / 1000) y: string(dist);			
+			float dist <- topology(sub_graph) distance_between [location, current_trip.current_road.end];
 		}
-		//do later the_action: log_data at: event_date + 0.1;
 	}
 
 	// Leave current road	
 	action leave_current_road (date request_time) {
 		if current_trip.current_road != nil {
 			Road road <- get_current_road();
+			//write "LEAVE -> " +  road.get_size() + " : " + milliseconds_between(starting_date, request_time);
 			if road != nil {
 				ask road {
 					do leave(myself, request_time);
@@ -252,53 +251,30 @@ species Transport virtual: true skills: [scheduling, logging] {
 				current_trip.is_waiting <- false;
 				
 				// Compute mean speed
-				/*if current_trip.current_road != nil {
-					//write "----------------";
-					//write milliseconds_between(starting_date, entry_time) / 1000;
-					//write milliseconds_between(starting_date, request_time) / 1000;
-					//write milliseconds_between(entry_time, request_time) / 1000;
-					
+				if current_trip.current_road != nil {					
 					date exit_exec_time <- (starting_date + (machine_time / 1000));
 					float milli <- milliseconds_between(entry_time, request_time);
 					float exec_time <- milliseconds_between(entry_exec_time, exit_exec_time) / 1000;
 					if (milli) != 0 {
-						mean_speed <- ((current_trip.current_road.start_node distance_to current_trip.current_target) / (milli / 1000)) * 3.6;
-						do later the_action: log_data at: request_time;
-						do log_plot_2d agent_name: name date: request_time data_name: "speed" x: road.name y: string(mean_speed);
-						do log_plot_2d agent_name: name date: request_time data_name: "time" x: road.name y: string((milli / 1000));
-						do log_plot_2d agent_name: name date: request_time data_name: "jam" x: road.name y: string(jam_duration);
-						do log_plot_2d agent_name: name date: request_time data_name: "exec" x: road.name y: string(exec_time);
-						
+						float dist <- topology(network.available_graph) distance_between [current_trip.current_road.start, current_trip.current_target];
+						mean_speed <- (dist / (milli / 1000)) * 3.6;						
 						entry_time <- nil;
 						entry_exec_time <- nil;
 						mean_speed <- nil;
 						jam_duration <- nil;
 						jam_start <- nil;
-						
-						/*if mean_speed > 50 {
-							write "----------";
-							write request_time;
-							write entry_time;
-							write (current_trip.current_road.start_node distance_to current_trip.current_target);
-							write mili;
-							write name;
-							write current_trip.current_road;
-							write "MEAN = " + mean_speed;	
-						}
 					} else {
 						write "Something wrong, time is null";
 					}
 					entry_time <- request_time;
 					entry_exec_time <- exit_exec_time;
-				}*/
+				}
 			}
 		}
 	}
 	
 	// Inner changer road
-	action inner_change_road (Road road, date start_time) {
-		//write 'Inner ' + ((starting_date milliseconds_between start_time) / 1000);
-			
+	action inner_change_road (Road road, date start_time) {		
 		// Joined varaiable used to leave road if true
 		bool joinable <- false;
 		bool exists <- false;
@@ -309,28 +285,29 @@ species Transport virtual: true skills: [scheduling, logging] {
 		}
 		
 		if exists {
-			write "Something wrong, the car is already in the next road";
+			write "Something wrong, the transport is already in the next road: " + name;
 			return;
 		}
 
 		if joinable {
 			current_trip.is_waiting <- false;
 
-			// Set the current target depending if it's the last road or not
+			// Set the current target depending if it's the last road or not		
 			do leave_current_road(start_time);
+			current_trip.current_road <- road;
+			current_trip.next_road <- get_next_road();
+			
 			if it_is_last_road_changing() {
 				current_trip.current_target <- (road closest_points_with current_trip.end_location)[0];
-			} else {	
-				current_trip.current_target <- last(road.shape.points);
-				//current_trip.current_target <- road.end_node.location;
+			} else {
+				current_trip.current_target <- road.end;
 			}
 
 			ask road {
+				//write "JOIN -> " +  road.get_size() + " : " + milliseconds_between(starting_date, start_time);
 				do join(myself, start_time, !joinable);
 			}
 			
-			current_trip.current_road <- road;
-			current_trip.next_road <- get_next_road();
 		} else {
 			current_trip.is_waiting <- true;
 			
@@ -352,75 +329,6 @@ species Transport virtual: true skills: [scheduling, logging] {
 			do end(request_date);
 		}
 
-	}
-	
-	// Get closest transport in the graph
-	list<unknown> get_closest_transport(float distance_max) {
-		if current_trip.current_road != nil {
-			graph sub_graph <- nil;
-			list<Transport> transports <- current_trip.current_road.road_model.get_transports() where (each != self); 
-		
-			//sub_graph <- network.available_graph;
-			sub_graph <- as_edge_graph([current_trip.current_road], [first(current_trip.current_road.shape.points), last(current_trip.current_road.shape.points)]);
-			float offset <- topology(sub_graph) distance_between [self, last(current_trip.current_road.shape.points)];		
-	
-			Transport closest <- nil;
-			float closest_distance <- nil;
-			list<unknown> res <- [nil, nil];
-			
-			if length(transports) > 0 {
-				res <- inner_get_closest(sub_graph, transports, distance_max, self.location);
-			}
-			
-			if res[0] = nil and offset < distance_max {
-				if current_trip.next_road != nil {
-					transports <- current_trip.next_road.road_model.get_transports() where (each != self);
-					sub_graph <- as_edge_graph([current_trip.next_road], [first(current_trip.next_road.shape.points), last(current_trip.next_road.shape.points)]);
-					return inner_get_closest(sub_graph, transports, distance_max, first(current_trip.next_road.shape.points), offset);	
-				}
-				return [nil, nil];
-			}
-			return res;
-		}
-		return [nil, nil];
-	}
-	
-	// Inner get closest
-	list<unknown> inner_get_closest(graph sub_graph, list<Transport> transports, float distance_max, point from, float offset <- 0) {
-		Transport closest <- nil;
-		float closest_distance <- distance_max;
-		
-		if sub_graph != nil and length(transports) > 0 {
-			//loop i from: length(transports) - 1 to: 0  {
-			float distance <- offset + (topology(sub_graph) distance_between [from, transports[0]]);				
-			
-			if distance > distance_max {
-				return [closest, closest_distance];
-			}
-			
-			/*if distance < closest_distance and distance > 0.01 {
-				closest_distance <- distance;
-				closest <- transports[i];
-			}*/
-			//}
-		}
-		
-		return [nil, nil];
-	}
-	
-	// Get all transport of current and the next road
-	list<Transport> get_trip_transports {
-		list<Transport> current_transports <- [];
-		//list<Transport> next_transports <- [];
-		
-		if current_trip.current_road != nil {
-			current_transports <- current_trip.current_road.road_model.get_transports();
-		}
-		/*if current_trip.next_road != nil {
-			next_transports <- current_trip.next_road.road_model.get_transports();
-		}*/
-		
-		return current_transports;// + next_transports;
 	}
 
 	/**
@@ -449,9 +357,8 @@ species Transport virtual: true skills: [scheduling, logging] {
 
 	// Compute straight forward duration: transport target in the given road
 	float compute_straight_forward_duration_through_road (Road road, point target) {
-		//float computed_duration <- (location distance_to target) / road.get_max_freeflow_speed(self);
-		//return abs(computed_duration);
-		return road.get_road_travel_time(self, (location distance_to target));	
+		float dist <- topology(network.available_graph) distance_between [road.start, target];
+		return road.get_road_travel_time(self, dist);	
 	}
 
 }

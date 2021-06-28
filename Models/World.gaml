@@ -6,6 +6,7 @@
 */
 model SwITCh
 
+import "Species/Model/RoadModel/QueuedModel/MicroQueuedRoadIdmModel.gaml"
 import "Utilities/EventManager.gaml"
 import "Species/Individual/Individual.gaml"
 import "Species/Building.gaml"
@@ -65,8 +66,7 @@ global {
 
 		// Create road
 		write "Road...";
-		create Road from: shape_roads with:
-		[type:: read("type"), junction::read("junction"), max_speed::float(read("maxspeed")), lanes::int(read("lanes")), oneway::read("oneway"), foot::read("foot"), bicycle::read("bicycle"), access::read("access"), bus::read("bus"), parking_lane::read("parking_la"), sidewalk::read("sidewalk"), cycleway::read("cycleway")];
+		create Road from: shape_roads with: [max_speed::float(read("maxspeed")), parking_lane::read("parking_la")];
 		write "-> " + (starting_date + (machine_time / 1000));
 
 		write "Graph...";
@@ -135,7 +135,7 @@ global {
 						a.start_date <- act_starting_time + (1800 * 4 + (1800 * rnd(0, 100) / 100));
 					}*/
 					
-					a.start_date <- act_starting_time + (1800 * (i / length(Individual)));
+					//a.start_date <- act_starting_time + (10 * (i / length(Individual)));
 					i <- i + 1;
 					
 					// If working ID exists
@@ -202,15 +202,15 @@ global {
 		// ############################ WARNING WARNING WIP IN PROGRESS TEST 
 		
 		// TODO ???????? wtf because Agents are not scheduled
-		create TransportMovingWrapper {
+		create TransportMovingGippsWrapper {
 			do die;
 		}
 		
-		create TransportMovingLinearGippsWrapper {
+		create TransportMovingIdmWrapper {
 			do die;
 		}
 		
-		create TransportMovingLinearGippsEventWrapper {
+		create TransportMovingGippsEventWrapper {
 			do die;
 		}
 
@@ -243,8 +243,10 @@ experiment "SwITCh" type: gui {
 			species Bike;
 			species Individual;
 			
-			species TransportMovingLinearGippsWrapper;
-			species TransportMovingLinearGippsEventWrapper;
+			species TransportMovingGippsWrapper;
+			species TransportMovingIdmWrapper;
+			species TransportMovingGippsEventWrapper;
+			species MicroQueuedRoadIdmModel;
 		}
 
 	}

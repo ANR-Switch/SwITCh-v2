@@ -89,10 +89,10 @@ species SimpleRoadModel parent: RoadModel {
 	}
 	
 	// Implement end
-	action end_road {
-		ask refer_to as Transport {
-			do update_positions(last(myself.attached_road.shape.points));
-			do change_road(myself.event_date);			
+	action end_road(Transport transport, date request_time) {
+		ask transport {
+			do update_positions(myself.attached_road.end);
+			do change_road(request_time);			
 		}
 	}
 	

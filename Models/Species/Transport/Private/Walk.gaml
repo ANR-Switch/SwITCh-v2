@@ -72,11 +72,9 @@ species Walk parent: PrivateTransport {
 		// Get location and target in order to compute the straight forward duration
 		location <- passengers[0].location;
 		current_trip.current_target <- passengers[0].get_target();
-		date connexion_date <- start_time + compute_straight_forward_duration(current_trip.current_target);
-		
-		/*write "1 " + start_time milliseconds_between (starting_date + time);
-		write "2 " + start_time milliseconds_between connexion_date;*/
-
+		//date connexion_date <- start_time + compute_straight_forward_duration(current_trip.current_target);
+		date connexion_date <- start_time;
+	
 		// Do the normal behavior after straight forward duration
 		do later the_action: connexion_network at: connexion_date;
 	}
@@ -84,8 +82,6 @@ species Walk parent: PrivateTransport {
 	// Super end (PrivateNetwork) wrapper
 	action connexion_network {
 		do update_positions(current_trip.current_target);
-		
-		//write " CONN " + event_date milliseconds_between (starting_date + time);
 		return super.end(event_date);
 	}
 

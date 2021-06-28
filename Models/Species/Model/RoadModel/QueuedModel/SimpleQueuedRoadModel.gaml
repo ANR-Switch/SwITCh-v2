@@ -43,14 +43,171 @@ species SimpleQueueRoadModel parent: RoadModel skills: [scheduling] {
 	// Outflow duration
 	float outflow_duration <- 1 / (600 / 60) #s;
 	
+	// Last out date
+	date last_out <- nil;
+	
+	/**
+	 * Handlers collections
+	 */
+	
+	// Add transport to waiting queue
+	action push_in_waiting_queue (Transport transport) {
+		push item: transport to: waiting_transports;
+	}
+	
+	// Add new transport
+	action add_transport (Transport transport) {
+		push item: transport to: transports;
+	}
+	
+	// Add request time transport
+	action add_request_time_transport (Transport transport, date request_time) {
+		do add_transport (transport);
+		add request_time at: transport to: request_times;				
+	}
+	
+	// Implementation get transports
+	list<Transport> get_transports {
+		return list(transports);
+	}
+
+	// Remove transport
+	action remove_transport (Transport transport) {
+		Transport first <- pop(transports);
+		remove key: first from: request_times;
+	}
+
+	// Clear transports
+	action clear_transports {
+		loop transport over: transports {
+			// Remove event from the event manager
+			ask transport {
+				do clear_events;
+			}
+
+		}
+		remove key: transports from: request_times;
+		remove from: transports all: true;
+	}
+	
+	/**
+	 * Join
+	 */
+	 
+	// Implementation of join
+	action join (Transport transport, date request_time, bool waiting) {
+		if waiting {
+			do push_in_waiting_queue(transport);
+		} else {
+			ask transport {
+				myself.attached_road.current_capacity <- myself.attached_road.current_capacity - size;
+				do update_positions(first(myself.attached_road.start).location);
+			}
+			
+			// Ask the transport to change road when the travel time is reached
+			ask transport {
+				do update_positions(myself.attached_road.location);
+			}
+			
+			// Compute travel time
+			float travel_time <- transport.compute_straight_forward_duration_through_road(attached_road, transport.get_current_target());		
+			
+			// Add data
+			do add_request_time_transport(transport, (request_time + travel_time));
+			
+			// If this is the first transport
+			if length(transports) = 1 {
+				do check_first_agent(request_time);		
+			}		
+		}
+	}
+	 
+	/**
+	 * Leave
+	 */
+	
+	// Implementation of leave
+	action leave (Transport transport, date request_time) {		
+		// Remove transport (pop first)
+		do remove_transport(transport);
+		
+		// Update capacity
+		ask transport {
+			myself.attached_road.current_capacity <- myself.attached_road.current_capacity + size;
+		}
+
+		// Check and add transport
+		do check_waiting(request_time);
+	}
+	
+	// Exit signal
+	action exit_signal {
+		do exit(refer_to as Transport, event_date);
+	}
+	
+	// Exit action
+	action exit(Transport transport, date request_time) {
+		last_out <- request_time;
+		ask transport {
+			do update_positions(myself.attached_road.end);
+			do change_road(request_time);
+		}
+	}
+	
+	// Implement end
+	action end_road(Transport transport, date request_time) {
+		if last_out = nil {
+			do exit(transport, request_time);
+		} else {
+			float delta <- (request_time - last_out);
+			if delta >= outflow_duration {
+				do exit(transport, request_time);
+			} else {
+				// If the transport has crossed the road
+				date signal_date <- request_time + (outflow_duration - delta);
+				
+				// If the signal date is equals to the actual step date then execute it directly
+				if signal_date = (starting_date + time) {
+					do exit(transport, request_time + (outflow_duration - delta));
+				} else {
+					do later the_action: exit_signal at: request_time + (outflow_duration - delta) refer_to: transport;					
+				}
+			}
+		}		
+	}
+
+	// Implement end
+	action end_road_signal {
+		do end_road(refer_to as Transport, event_date);
+	}
+	
+	/**
+	 * Waiting agents
+	 */
+	
+	// Check waiting agents
+	action check_waiting(date request_time) {
+		do check_first_agent(request_time);
+		if length(waiting_transports) > 0 {
+			do add_waiting_agents(request_time);
+		}
+	}
+	
 	// Check first transport
 	action check_first_agent (date request_time) {
 		if not empty(transports) {
-			Transport first <- first(transports);
-			if request_time >= request_times[first] {
-				do later the_action: exit at: request_time + outflow_duration refer_to: first;
+			Transport transport <- first(transports);
+			date end_road_date; 
+			if request_time > request_times[transport] {
+				end_road_date <- request_time;
 			} else {
-				do later the_action: end_road at: request_times[first];
+				end_road_date <- request_times[transport];
+			}
+			
+			if end_road_date = (starting_date + time) {
+				do end_road(transport, end_road_date);			
+			} else {
+				do later the_action: end_road_signal at: end_road_date refer_to: transport;			
 			}
 		}
 	}
@@ -59,146 +216,21 @@ species SimpleQueueRoadModel parent: RoadModel skills: [scheduling] {
 	action add_waiting_agents (date request_time) {
 		// Check if waiting tranport can be join the road
 		loop while: not empty(waiting_transports) and has_capacity(first(waiting_transports)) {
-			// Get first transport
-			Transport first <- pop(waiting_transports);
-			
-			ask first {
-				//do update_positions(myself.attached_road.end_node.location);
+			// Get first transport			
+			ask pop(waiting_transports) {
 				do inner_change_road(myself.attached_road, request_time);
 			}
 		}
 	}
-
-	// Add transport to waiting queue
-	action push_in_waiting_queue (Transport transport) {
-		push item: transport to: waiting_transports;
-	}
-
-	// Implementation get transports
-	list<Transport> get_transports {
-		return list(transports);
-	}
-
-	// Implementation get transports
-	action set_transports (list<Transport> transport_list) {
-		loop transport over: transport_list {
-			do add_transport(transport);
-		}
-	}
-		
-	// Check waiting agents
-	action check_waiting(date request_date) {
-		if length(waiting_transports) > 0 {
-			do add_waiting_agents(request_date);
-		}
-	}
-
-	// Add new transport
-	action add_transport (Transport transport) {
-		// Add transport
-		push item: transport to: transports;
-	}
 	
-	// Add request time transport
-	action add_request_time_transport (Transport transport, date request_time) {
-		// Add request time
-		add request_time at: transport to: request_times;				
-	}
-
-	// Remove transport
-	action remove_transport (Transport transport) {
-		// Remove
-		Transport first <- pop(transports);
-		remove key: first from: request_times;
-	}
-
-	// Clear transports
-	action clear_transports {
-		loop transport over: transports {
-			// Remove event from the scheduler
-			ask transport {
-				do clear_events;
-			}
-
-		}
-
-		remove key: transports from: request_times;
-		remove from: transports all: true;
-	}
-
-	// Implementation of join
-	action join (Transport transport, date request_time, bool waiting) {
-		if waiting {
-			do push_in_waiting_queue(transport);
-		} else {
-			ask transport {
-				myself.attached_road.current_capacity <- myself.attached_road.current_capacity - size;
-				do update_positions(first(myself.attached_road.shape.points).location);
-			}
-			
-			// If there is no road before the entry_time is 0;
-			float entry_time <- 0.0;
-			if transport.current_trip.current_road != nil {
-				entry_time <- attached_road.start_node.waiting_time;				
-			}
-			
-			// Something wrong with float precision sometimes...
-			if entry_time = 0 and request_time = (starting_date + time) {
-				do later the_action: entry refer_to: transport;							
-			} else {
-				do later the_action: entry at: request_time + entry_time refer_to: transport;			
-			}
-		}
-	}
 	
-	// Entry action
-	action entry {
-		Transport transport <- refer_to as Transport;
-		
-		// Ask the transport to change road when the travel time is reached
-		ask transport {
-			do update_positions(myself.attached_road.location);
-		}
-		
-		// Compute travel time
-		float travel_time <- transport.compute_straight_forward_duration_through_road(attached_road, transport.get_current_target());		
-		
-		// Add data
-		do add_transport(transport);
-		do add_request_time_transport(transport, (event_date + travel_time));
-		//do check_waiting(event_date);
-		
-		// If this is the first transport
-		if transport = first(transports) {
-			do check_first_agent(event_date);		
-		}
-	}
+	/**
+	 * Utilities
+	 */	
 
-	// Implementation of leave
-	action leave (Transport transport, date request_time) {
-		// Remove transport (pop first)
-		do remove_transport(transport);
-		//do check_waiting(request_time);
-		ask transport {
-			myself.attached_road.current_capacity <- myself.attached_road.current_capacity + size;
-		}
-
-		// Check and add transport
-		do check_first_agent(request_time);
-		do check_waiting(request_time);
-	}
-	
-	// Exit action
-	action exit {
-		ask refer_to as Transport {
-			do update_positions(last(myself.attached_road.shape.points));
-			do change_road(myself.event_date);
-		}
-	}
-	
 	// Implement get max freeflow speed
 	float get_max_freeflow_speed (Transport transport) {
-		return min([transport.max_speed, attached_road.max_speed * 0.6]) #km / #h;
+		return min([transport.max_speed, attached_road.max_speed]) #km / #h;
 	}
 	
 	// Compute the travel of incoming transports
@@ -208,12 +240,6 @@ species SimpleQueueRoadModel parent: RoadModel skills: [scheduling] {
 		float ratio <- ((attached_road.max_capacity - attached_road.current_capacity) / attached_road.max_capacity);
 		float travel_time <- free_flow_travel_time * (1.0 + 0.15 * ratio ^ 4);
 		return travel_time with_precision 3;
-	}
-
-	// Implement end
-	action end_road {		
-		// If the transport have crossed the road
-		do later the_action: exit at: event_date + outflow_duration refer_to: first(transports);
 	}
 
 	// Just the current capacity

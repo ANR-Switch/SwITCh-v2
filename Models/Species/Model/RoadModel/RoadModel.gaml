@@ -26,16 +26,13 @@ species RoadModel virtual: true parent: IRoad skills: [scheduling] {
 	action join (Transport transport, date request_time, bool waiting) virtual: true;
 
 	// Virtual end 
-	action end_road virtual: true;
+	action end_road (Transport transport, date request_time) virtual: true;
 
 	// Virtual leave the road
 	action leave (Transport transport, date request_time) virtual: true;
 
 	// Virtual get transports
 	list<Transport> get_transports virtual: true;
-
-	// Virtual set transports
-	action set_transports (list<Transport> transport_list) virtual: true;
 
 	// Virtual add transport
 	action add_transport (Transport transport) virtual: true;

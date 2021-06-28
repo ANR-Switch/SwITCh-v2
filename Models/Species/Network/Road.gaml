@@ -12,75 +12,10 @@ import "../Model/RoadModel/SimpleModel/SimpleRoadModel.gaml"
 import "../Model/RoadModel/SimpleModel/MicroRoadModel.gaml"
 import "../Model/RoadModel/QueuedModel/SimpleQueuedRoadModel.gaml"
 import "../Model/RoadModel/QueuedModel/MicroQueuedRoadModel.gaml"
+import "../Model/RoadModel/QueuedModel/MicroQueuedRoadIdmModel.gaml"
 import "../Model/RoadModel/QueuedModel/MicroEventQueuedRoadModel.gaml"
 import "../Network/Road.gaml"
 import "../Network/Crossroad.gaml"
-
-/**
- * Get end point of the current segment (for the given agent)
- */
-global {
- 	// Get end point of the current segment (for the given agent)
-	point get_end_point_road_segment(agent the_agent, Road the_road) {
-		point segment_end_point <- nil;
-		bool exec_loop <- true;
-		int i <- 0;
-		
-		loop while: exec_loop {
-			point p1 <- the_road.shape.points[i];
-			segment_end_point <- the_road.shape.points[i + 1];
-			
-			if rectangle(p1, segment_end_point) overlaps the_agent.location {
-				exec_loop <- false;
-			}
-			
-			i <- i + 1;
-			if i >= length(the_road.shape.points) - 1 {
-				exec_loop <- false;
-			}
-		}
-
-		return segment_end_point;
-	}
-	
-	// Get end point of the current segment (for the given agent)
-	list<point> get_list_of_points(Transport transport, Road current_road, Road next_road) {
-		// Return variable
-		list<point> segment_end_points <- nil;
-		// Current end
-		point segment_end_point <- nil;
-		
-		// Setup
-		bool exec_loop <- true;
-		bool found <- false;
-		int i <- 0;
-		
-		if current_road != nil {
-			loop while: exec_loop {
-				point p1 <- current_road.shape.points[i];
-				segment_end_point <- current_road.shape.points[i + 1];
-				
-				if found {
-					add segment_end_point to: segment_end_points;
-				} else if rectangle(p1, segment_end_point) overlaps transport.location {
-					add segment_end_point to: segment_end_points;
-					found <- true;
-				}
-				
-				i <- i + 1;
-				if i >= length(current_road.shape.points) - 1 {
-					exec_loop <- false;
-				}
-			}
-		}
-		
-		if next_road != nil {
-			add next_road.shape.points[1] to: segment_end_points;
-		}
-		return segment_end_points;
-	}
-}
-
 
 /** 
  * Road virtual species
@@ -152,13 +87,13 @@ species Road parent: IRoad {
 	
 	// Shape
 	geometry geom_display;
+	
+	// First and last points
+	point start;
+	point end;
 
 	// Init the road
 	init {
-		//location <- location with_precision 4;
-		//shape.points[0] <- first(self.shape.points) with_precision 4;
-		//shape.points[length(shape.points) - 1] <- last(self.shape.points) with_precision 4;
-
 		// Set start and end crossroad
 		start_node <- Crossroad closest_to first(self.shape.points);
 		end_node <- Crossroad closest_to last(self.shape.points);
@@ -181,19 +116,21 @@ species Road parent: IRoad {
 		*/
 		switch type {
 			match "residential" {
-				//road_model <- world.create_micro_event_queue_road_model(self);
-				road_model <- world.create_micro_queue_road_model(self);
-				//road_model <- world.create_micro_road_model(self);
-				//road_model <- world.create_simple_road_model(self);
-				//road_model <- world.create_simple_queue_road_model(self);				
-			}
-
-			default {
+				//road_model <- world.create_micro_idm_road_model(self);
 				//road_model <- world.create_micro_event_queue_road_model(self);
 				//road_model <- world.create_micro_queue_road_model(self);
 				//road_model <- world.create_micro_road_model(self);
 				//road_model <- world.create_simple_road_model(self);
-				road_model <- world.create_simple_queue_road_model(self);
+				road_model <- world.create_simple_queue_road_model(self);				
+			}
+
+			default {
+				road_model <- world.create_micro_idm_road_model(self);
+				//road_model <- world.create_micro_event_queue_road_model(self);
+				//road_model <- world.create_micro_queue_road_model(self);
+				//road_model <- world.create_micro_road_model(self);
+				//road_model <- world.create_simple_road_model(self);
+				//road_model <- world.create_simple_queue_road_model(self);
 			}
 
 		}
@@ -293,11 +230,9 @@ species Road parent: IRoad {
 		
 	// Setup
 	action setup {
-		//point first <- first(shape.points);
-		//point last <- last(shape.points);
 		shape <- geom_display;
-		//shape.points[0] <- first;
-		//shape.points[length(shape.points) - 1] <- last;
+		start <- first(shape.points);
+		end <- last(shape.points);
 	}
 
 	// Default aspect

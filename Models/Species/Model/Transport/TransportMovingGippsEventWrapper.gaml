@@ -14,8 +14,8 @@ import "../../Transport/Transport.gaml"
 global {
 
 	// Create transport wrapper
-	TransportMovingLinearGippsEventWrapper create_transport_moving_linear_gipps_event_wrapper (Transport transport_to_wrap, TransportMovingLinearGippsEventWrapper closest, RoadModel road_model) {
-		create TransportMovingLinearGippsEventWrapper returns: values {
+	TransportMovingGippsEventWrapper create_transport_moving_gipps_event_wrapper (Transport transport_to_wrap, TransportMovingGippsEventWrapper closest, RoadModel road_model) {
+		create TransportMovingGippsEventWrapper returns: values {
 			current_road <- road_model;
 			wrapped <- transport_to_wrap;
 			location <- transport_to_wrap.location;
@@ -48,7 +48,7 @@ global {
 /** 
  * Transport moving species
  */
-species TransportMovingLinearGippsEventWrapper skills: [moving, scheduling] {
+species TransportMovingGippsEventWrapper skills: [moving, scheduling] {
 	// The event manager
 	agent event_manager <- EventManager[0];
 	
@@ -74,39 +74,37 @@ species TransportMovingLinearGippsEventWrapper skills: [moving, scheduling] {
 	float desired_speed;
 
 	// Max acceleration
-	float max_acc <- (2.0 #m / (#s ^ 2));
+	float max_acc <- (1.5 #m / (#s ^ 2));
 
 	// Most sever break
-	float most_sever_break <- (3.0 #m / (#s ^ 2));
+	float most_sever_break <- (1.0 #m / (#s ^ 2));
 
 	// Reaction time
 	float reaction_time <- step;
 
 	// Spacing between two cars
-	float spacing <- 1.0#m;
+	float spacing <- 2.0#m;
 	
 	// Next car
 	agent closest_agent <- nil;
 	
 	// Sensing zone
-	//geometry sensing_zone;
+	geometry sensing_zone;
 
 	// Reaction drive
 	action compute_reaction_drive {
-		float sqrt_value <- 0.025 + (speed / desired_speed);
 		float v_temp <- speed + max_acc * reaction_time;
-		//float v_temp <- speed + 2.5 * max_acc * reaction_time;
 		float v_desired <- desired_speed;
 		float v_safe <- #infinity;
 	
-		//list<Transport> transports <- wrapped.get_trip_transports() where (each.location overlaps sensing_zone and each != wrapped);
-		list<unknown> res <- wrapped.get_closest_transport(40.0);
+		list<Transport> transports <- wrapped.current_trip.get_current_road_transports() where (each.location overlaps sensing_zone and each != wrapped);
+		//list<unknown> res <- wrapped.get_closest_transport(40.0);
 	
 		// If there is agent 
 		float closest_speed <- 0.0;
 		float closest_distance <- location distance_to target;
-		//closest_agent <- transports closest_to location;
-		closest_agent <- res[0];
+		closest_agent <- transports closest_to location;
+		//closest_agent <- res[0];
 		if closest_agent = wrapped {
 			write "Something wrong, the closest car is itself";
 			closest_agent <- nil;
@@ -116,8 +114,8 @@ species TransportMovingLinearGippsEventWrapper skills: [moving, scheduling] {
 			float sqrt_value <- 0.0;
 			// Get speed of the closest agent
 			closest_speed <- float(closest_agent get ("speed"));
-			//closest_distance <- location distance_to closest_agent;
-			closest_distance <- float(res[1]);
+			closest_distance <- location distance_to closest_agent;
+
 			sqrt_value <- most_sever_break ^ 2 * reaction_time ^ 2 + closest_speed ^ 2 + 2 * most_sever_break * (closest_distance - spacing - (wrapped.size / 2));
 			if sqrt_value <= 0 {
 				v_safe <- 0.0;	
@@ -128,9 +126,6 @@ species TransportMovingLinearGippsEventWrapper skills: [moving, scheduling] {
 		
 		// Set speed
 		speed <- min(v_temp, v_desired, v_safe);
-		if speed < 0 {
-			speed <- 0.0;
-		}
 	}
 
 	// Inner move
@@ -140,26 +135,18 @@ species TransportMovingLinearGippsEventWrapper skills: [moving, scheduling] {
 			do compute_reaction_drive;
 		}
 		
-		/*write "------";
-		write speed;
-		write step;
-		write time_step;
-		write speed / (step / time_step);*/
-		
 		do goto on: current_road.attached_road target: target speed: speed / (step / time_step);
-		//write location;
+		wrapped.shape <- wrapped.default_shape rotated_by heading;
 		
 		/*float cos_a <- cos(heading);
 		float sin_a <- sin(heading);
 		point rect_pos <- location + (point(cos_a, sin_a) * 20.01);
-		wrapped.shape <- wrapped.default_shape rotated_by heading;
 		sensing_zone <- rectangle(40, 40) at_location rect_pos rotated_by heading;
 		inner_cycle <- inner_cycle + 1;*/
 	}
 
 	// One step
 	action one_step_moving  {
-		//write 'Step ' + ((starting_date milliseconds_between event_date) / 1000);	
 		do inner_move();
 		distance <- abs(location distance_to target);
 		
@@ -172,13 +159,12 @@ species TransportMovingLinearGippsEventWrapper skills: [moving, scheduling] {
 		// Set position
 		ask wrapped {
 			do update_positions(myself.location);
-		 	//do later the_action: log_data at: myself.event_date + myself.time_step;
 		}
 
 		// Change road
 		if distance <= 0.0 {
 			ask current_road {
-				do later the_action: end_road at: myself.event_date + myself.time_step refer_to: myself.wrapped;									
+				do end_road(myself.wrapped, myself.event_date + myself.time_step);									
 			}
 			do die;
 		}
@@ -187,7 +173,6 @@ species TransportMovingLinearGippsEventWrapper skills: [moving, scheduling] {
 
 	// Moving force 
 	action moving(date start_time) {
-		//write 'start ' + event_date;
 		do later the_action: one_step_moving at: start_time;
 	}
 	

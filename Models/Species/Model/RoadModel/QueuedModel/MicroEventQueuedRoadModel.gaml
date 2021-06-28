@@ -7,8 +7,7 @@
 model SwITCh
 
 import "../RoadModel.gaml"
-import "../../Transport/TransportMovingWrapper.gaml"
-import "../../Transport/TransportMovingLinearGippsEventWrapper.gaml"
+import "../../Transport/TransportMovingGippsEventWrapper.gaml"
 
 /** 
  * Add to world the action to create a new road
@@ -34,7 +33,7 @@ global {
  */
 species MicroEventQueuedRoadModel parent: RoadModel {
 	// The list of transport in this road
-	map<Transport, TransportMovingLinearGippsEventWrapper> transports_wraps;
+	map<Transport, TransportMovingGippsEventWrapper> transports_wraps;
 	list<Transport> transports;
 	
 	// Waiting queue
@@ -66,7 +65,7 @@ species MicroEventQueuedRoadModel parent: RoadModel {
 	// Add transport
 	action add_transport (Transport transport) {		
 		// Create wrap
-		TransportMovingLinearGippsEventWrapper wrap <- world.create_transport_moving_linear_gipps_event_wrapper(transport, transports_wraps closest_to transport, self);
+		TransportMovingGippsEventWrapper wrap <- world.create_transport_moving_gipps_event_wrapper(transport, transports_wraps closest_to transport, self);
 
 		// Add the wrapped transport
 		add transport to: transports;
@@ -89,7 +88,7 @@ species MicroEventQueuedRoadModel parent: RoadModel {
 	// Remove transport
 	action remove_transport (Transport transport) {		
 		// Get wrap
-		TransportMovingLinearGippsEventWrapper wrap <- transports_wraps[transport];
+		TransportMovingGippsEventWrapper wrap <- transports_wraps[transport];
 		if not dead(wrap) {
 			// Die wrapper	
 			ask wrap {
@@ -109,7 +108,7 @@ species MicroEventQueuedRoadModel parent: RoadModel {
 			// Get first transport
 			Transport first <- pop(waiting_transports);
 			ask first {
-				do update_positions(last(myself.attached_road.shape.points));
+				do update_positions(myself.attached_road.end);
 				do inner_change_road(myself.attached_road, request_time);
 			}
 		}
@@ -123,32 +122,17 @@ species MicroEventQueuedRoadModel parent: RoadModel {
 			// Ask the transport to change road when the travel time is reached
 			ask transport {
 				myself.attached_road.current_capacity <- myself.attached_road.current_capacity - size;
-				do update_positions(first(myself.attached_road.shape.points).location);
+				do update_positions(myself.attached_road.start);
 			}
 			do add_transport_and_start(transport);
 		}
 	}
-	
-	// Entry action
-	action exit {
-		ask refer_to as Transport {
-			do change_road(myself.event_date);
-		}
-	}
 
 	// Implement end
-	action end_road {	
-		Transport transport <- refer_to as Transport;
-		
-		// Not used: in the futur we can imagine that the crossroad ca provide a time to wait
-		//float entry_time <- 0.0;
-		//if transport.current_trip.current_road != nil {
-		//	entry_time <- attached_road.start_node.waiting_time;
-		//}
-		// -------
-	
-		//do later the_action: exit at: event_date + entry_time refer_to: transport;
-		do later the_action: exit at: event_date refer_to: transport;
+	action end_road(Transport transport, date request_time) {	
+		ask transport {
+			do change_road(request_time);
+		}
 	}
 
 	// Capacity

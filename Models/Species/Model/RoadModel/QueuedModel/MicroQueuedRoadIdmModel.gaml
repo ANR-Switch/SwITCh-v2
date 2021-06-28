@@ -7,15 +7,15 @@
 model SwITCh
 
 import "../RoadModel.gaml"
-import "../../Transport/TransportMovingGippsWrapper.gaml"
+import "../../Transport/TransportMovingIdmWrapper.gaml"
 
 /** 
  * Add to world the action to create a new road
  */
 global {
 	// Create a new road
-	MicroQueuedRoadModel create_micro_queue_road_model (Road micro_attached_road) {
-		create MicroQueuedRoadModel returns: values {
+	MicroQueuedRoadIdmModel create_micro_idm_road_model (Road micro_attached_road) {
+		create MicroQueuedRoadIdmModel returns: values {
 			color <- #blue;
 			attached_road <- micro_attached_road;
 		}
@@ -31,10 +31,12 @@ global {
  * 
  * Implement Road species
  */
-species MicroQueuedRoadModel parent: RoadModel {
+species MicroQueuedRoadIdmModel parent: RoadModel {
 	// The list of transport in this road
-	map<Transport, TransportMovingGippsWrapper> transports_wraps;
+	map<Transport, TransportMovingIdmWrapper> transports_wraps;
 	list<Transport> transports;
+	
+	geometry sensing;
 	
 	// Waiting queue
 	queue<Transport> waiting_transports;
@@ -63,9 +65,9 @@ species MicroQueuedRoadModel parent: RoadModel {
 	}
 
 	// Add transport
-	action add_transport (Transport transport) {		
+	action add_transport (Transport transport) {
 		// Create wrap
-		TransportMovingGippsWrapper wrap <- world.create_transport_moving_gipps_wrapper(transport, transports_wraps closest_to transport, self);
+		TransportMovingIdmWrapper wrap <- world.create_transport_moving_idm_wrapper(transport, self);
 
 		// Add the wrapped transport
 		add transport to: transports;
@@ -88,7 +90,7 @@ species MicroQueuedRoadModel parent: RoadModel {
 	// Remove transport
 	action remove_transport (Transport transport) {		
 		// Get wrap
-		TransportMovingGippsWrapper wrap <- transports_wraps[transport];
+		TransportMovingIdmWrapper wrap <- transports_wraps[transport];
 		if not dead(wrap) {
 			// Die wrapper	
 			ask wrap {
@@ -133,14 +135,16 @@ species MicroQueuedRoadModel parent: RoadModel {
 		ask transport {
 			do change_road(request_time);
 		}
-		
 	}
 
 	// Capacity
 	bool has_capacity (Transport transport) {
+		sensing <- circle(transport.size, attached_road.start_node.location);
+		bool available <- length(transports where (sensing overlaps each)) <= 0;
+		
 		return attached_road.current_capacity >= transport.size
 			and 
-			not (circle((transport.size / 2.0) + 1.0, attached_road.start_node.location) overlaps (transports closest_to transport));
+			available;
 	}
 	
 	// Reflex
@@ -169,5 +173,9 @@ species MicroQueuedRoadModel parent: RoadModel {
 	bool check_if_exists(Transport transport) {
 		list<Transport> tmp <- (transports + waiting_transports) where(each = transport);	
 		return length(tmp) > 0;
+	}
+	
+	aspect {
+		//draw sensing empty: true border: #blue;
 	}
 }

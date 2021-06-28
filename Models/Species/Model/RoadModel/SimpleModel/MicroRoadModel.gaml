@@ -7,7 +7,7 @@
 model SwITCh
 
 import "../RoadModel.gaml"
-import "../../Transport/TransportMovingWrapper.gaml"
+import "../../Transport/TransportMovingGippsWrapper.gaml"
 
 /** 
  * Add to world the action to create a new road
@@ -32,8 +32,8 @@ global {
  * Implement Road species
  */
 species MicroRoadModel parent: RoadModel {
-// The list of transport in this road
-	map<Transport, TransportMovingWrapper> transports_wraps;
+	// The list of transport in this road
+	map<Transport, TransportMovingGippsWrapper> transports_wraps;
 	list<Transport> transports;
 
 	// Implementation get transports
@@ -62,7 +62,7 @@ species MicroRoadModel parent: RoadModel {
 	// Add transport
 	action add_transport (Transport transport) {
 		// Create wrap
-		TransportMovingWrapper wrap <- world.create_transport_moving_wrapper(transport, self);
+		TransportMovingGippsWrapper wrap <- world.create_transport_moving_gipps_wrapper(transport, transports_wraps closest_to transport, self);
 
 		// Add the wrapped transport
 		add transport to: transports;
@@ -73,14 +73,14 @@ species MicroRoadModel parent: RoadModel {
 	action add_transport_with_delta_cycle (Transport transport, float delta_cycle, date request_date) {
 		do add_transport(transport);
 		ask transports_wraps[transport] {
-			do moving(delta_cycle, request_date);
+			do moving(request_date);
 		}
 	}
 
 	// Remove transport
 	action remove_transport (Transport transport) {
 		// Get wrap
-		TransportMovingWrapper wrap <- transports_wraps[transport];
+		TransportMovingGippsWrapper wrap <- transports_wraps[transport];
 		if not dead(wrap) {
 			// Die wrapper	
 			ask wrap {
@@ -119,16 +119,10 @@ species MicroRoadModel parent: RoadModel {
 	}
 
 	// Implement end
-	action end_road {
-		ask refer_to as Transport {
+	action end_road(Transport transport, date request_time) {
+		ask transport {
 			do change_road(myself.event_date);
 		}
-
-	}
-	
-	// Nothing
-	action step {
-		
 	}
 
 	// Capacity

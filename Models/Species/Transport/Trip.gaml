@@ -92,6 +92,24 @@ species Trip {
 		}
 
 	}
+	
+	// Get all transport of current road
+	list<Transport> get_current_road_transports {	
+		if current_road != nil {
+			return current_road.road_model.get_transports();	
+		} else {
+			return [];
+		}
+	}
+	
+	// Get all transport of the next road
+	list<Transport> get_next_road_transports {	
+		if next_road != nil {
+			return next_road.road_model.get_transports();	
+		} else {
+			return [];
+		}
+	}
 
 	// Start the trip
 	point pre_compute (point position) {
@@ -112,7 +130,7 @@ species Trip {
 		// Set start and end point in the graph. Set the first intermediate target
 		start_location <- ((Road closest_to origin).shape closest_points_with origin)[0];
 		end_location <- ((Road closest_to target).shape closest_points_with target)[0];
-		current_target <- last(first(transport.network.path_to_target).shape.points);
+		current_target <- first(transport.network.path_to_target).end;
 		transport.location <- start_location;
 	}
 
