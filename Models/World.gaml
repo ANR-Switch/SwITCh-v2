@@ -24,7 +24,7 @@ global {
 
 	// Starting date of the simulation 
 	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
-	float step <- 0.1#seconds;
+	float step <- 1#seconds;
 	float seed <- 424242.0;
 
 	// Get general configuration
@@ -93,8 +93,13 @@ global {
 
 		// Create individuals from database
 		write "Individual...";
-		create Individual from: shape_individuals with: [age::int(read("age")), working_place_id::int(read("work_pl")), home_place_id::int(read("home_pl"))];		
-		
+		list<int> rds;
+		create Individual from: shape_individuals with: [age::int(read("age")), working_place_id::int(read("work_pl")), home_place_id::int(read("home_pl"))] {
+			add rnd(0, 28800.0) to: rds;
+			if length(Individual) > 20000 {
+				do die();
+			}
+		}		
 		write "-> " + (starting_date + (machine_time / 1000));
 
 		// ############################ WIP IN PROGRESS TEST WARNING WARNING 
@@ -109,15 +114,18 @@ global {
 			list<Building> work_building <- Building where (each.type = "working");
 			list<Building> home_building <- Building where (each.type = "staying_home");
 			
-			int i <- 0;
+			//write study_building;
+			
 			loop activity over: list<map<string, unknown>>(fake_agenda_data["metro_boulot_dodo"]) {
+				int i <- 0;
 				date act_starting_time <- starting_date + int(activity["starting_date"]);
 				int act_type <- int(activity["activity_type"]);
 	
-				// Add activity to all individuals
-				Activity a <- create_activity(act_starting_time, act_type);
 				ask Individual {
-					int random <- rnd(0, 100);
+					// Add activity to all individuals
+					Activity a <- world.create_activity(act_starting_time + rds[i], act_type);
+					
+					//int random <- rnd(0, 100);
 					//if (random <= 85) {
 					//	has_car <- true;
 					//	has_bike <- true;	

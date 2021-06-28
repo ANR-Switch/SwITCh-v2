@@ -198,7 +198,7 @@ species TransportMovingGippsWrapper parent: TransportModel skills: [moving] {
 	
 	aspect {
 		//draw sensing_zone empty: true border: #blue;
-		draw line(wrapped.location, sensing_zone.location) empty: true border: #blue;
+		draw line(wrapped.location, sensing_zone.location) wireframe: true border: #blue;
 	}
 	
 }

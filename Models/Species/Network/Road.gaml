@@ -125,12 +125,12 @@ species Road parent: IRoad {
 			}
 
 			default {
-				road_model <- world.create_micro_idm_road_model(self);
+				//road_model <- world.create_micro_idm_road_model(self);
 				//road_model <- world.create_micro_event_queue_road_model(self);
 				//road_model <- world.create_micro_queue_road_model(self);
 				//road_model <- world.create_micro_road_model(self);
 				//road_model <- world.create_simple_road_model(self);
-				//road_model <- world.create_simple_queue_road_model(self);
+				road_model <- world.create_simple_queue_road_model(self);
 			}
 
 		}

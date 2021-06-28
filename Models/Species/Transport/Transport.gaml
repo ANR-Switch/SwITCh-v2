@@ -264,6 +264,7 @@ species Transport virtual: true skills: [scheduling, logging] {
 						jam_duration <- nil;
 						jam_start <- nil;
 					} else {
+						write name;
 						write "Something wrong, time is null";
 					}
 					entry_time <- request_time;
