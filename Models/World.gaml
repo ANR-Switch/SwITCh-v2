@@ -103,9 +103,9 @@ global {
 		// Create individuals from database
 		write "Individual...";
 		list<int> rds;
-		create Individual from: shape_individuals /*with: [id::int(read("id")),age::int(read("age")), sex::string(read("sex")), role::string(read("role")),  activity::string(read("activity")),  education::string(read("education")),  income::int(read("income")),  id_household::int(read("id_household"))] */{
+				
+		create Individual from: shape_individuals with: [id::int(get("id")),age::int(get("age")), sex::string(get("sex")), role::string(get("role")),  activity::string(get("activity")),  education::string(get("education")),  income::int(get("income")),  id_household::int(get("id_household"))] {
 //			add rnd(0, 28800.0) to: rds;
-			write self.age;
 //			if length(Individual) > 20000 {
 //				do die();
 //			}
