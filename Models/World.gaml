@@ -29,7 +29,7 @@ global {
 
 	// Starting date of the simulation 
 	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
-	float step <- 1#seconds;
+	float step <- 1#second;
 	float seed <- 424242.0;
 
 	// Get general configuration
@@ -41,10 +41,16 @@ global {
 
 	// Get shapes
 	shape_file shape_buildings <- shape_file(dataset + "/Infrastructure/CASTANET-TOLOSAN/buildings.shp");
-	csv_file shape_individuals <- csv_file(dataset + "/Population/agents.csv",true);
 	shape_file shape_nodes <- shape_file(dataset + "/Infrastructure/CASTANET-TOLOSAN/nodes.shp");
 	shape_file shape_roads <- shape_file(dataset + "/Infrastructure/CASTANET-TOLOSAN/roads.shp");
 	shape_file shape_boundary <- shape_file(dataset + "/Infrastructure/CASTANET-TOLOSAN/boundary.shp");
+
+	// CSV files from Mobisim
+//	csv_file mobisim_individuals <- csv_file(dataset + "/Population/agents.csv",true);
+	csv_file mobisim_individuals <- csv_file(dataset + "/Population/GEN_individuals.csv",",",string,true);	
+	csv_file mobisim_households <- csv_file(dataset + "/Population/households.csv",true);
+	csv_file mobisim_housings <- csv_file(dataset + "/Population/housings.csv",true);
+	
 
 	// Graph configuration
 	string optimizer_type <- "NBAStar" among: ["NBAStar", "NBAStarApprox", "Dijkstra", "AStar", "BellmannFord", "FloydWarshall"];
@@ -104,28 +110,21 @@ global {
 
 		// Create buildings from database (must be defined before individuals in order to build the individual with home place and working place)
 		write "Building...";
-		create Building from: shape_buildings with: [id::int(read("id")), type:: read("type")];
+		create Building from: shape_buildings with: [id::string(read("id")), type:: read("type")];
 		write "-> " + (starting_date + (machine_time / 1000));
 
-//		// Create individuals from database
-//		write "Individual...";
-//		list<int> rds;
-//		create Individual from: shape_individuals with: [age::int(read("age")), working_place_id::int(read("work_pl")), home_place_id::int(read("home_pl"))] {
-//			add rnd(0, 28800.0) to: rds;
-//			if length(Individual) > 20000 {
-//				do die();
-//			}
-//		}		
-		// Create individuals from database
+		// Create individuals 
 		write "Individual...";
-		list<int> rds;
 				
-		create Individual from: shape_individuals with: [id::int(get("id")),age::int(get("age")), sex::string(get("sex")), role::string(get("role")),  activity::string(get("activity")),  education::string(get("education")),  income::int(get("income")),  id_household::int(get("id_household"))] {
-//			add rnd(0, 28800.0) to: rds;
-//			if length(Individual) > 20000 {
-//				do die();
-//			}
+		create Individual from: mobisim_individuals with: [id_building :: string(get("id_building")),id::int(get("id")),age::int(get("age")), sex::string(get("sex")), role::string(get("role")),  activity::string(get("activity")),  education::string(get("education")),  income::int(get("income")),  id_household::int(get("id_household"))] {
+			home_place <- Building first_with(each.id = id_building);
+			if(home_place = nil) {
+				do die;
+			}  else {
+				location <- any_location_in(home_place);
+			}
 		}	
+		write sample(length(Individual));
 		write "-> " + (starting_date + (machine_time / 1000));
 
 //		// ############################ WIP IN PROGRESS TEST WARNING WARNING 

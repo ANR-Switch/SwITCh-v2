@@ -27,7 +27,7 @@ global {
 	
 	//optional
 	string osm_file_path <- dataset_path + "map.pbf";
-	string ign_building_file_path <-  dataset_path + "bati_ign.shp"; 
+	string ign_building_file_path <-  dataset_path + "BATIMENT.shp"; 
 	
 	// Activity type buildings
 	file activities_file <- json_file(parameters_path + "Building type per activity type.json");
@@ -83,7 +83,7 @@ global {
 			height::float(get("height")), flats::int(get("building:flats")), levels::int(get("building:levels"))
 		] {
 			shape <- shape simplification simplification_dist ;
-			id <- int(self);
+			id <- ""+int(self);
 		}
 		write "Buildings: agents created. Buildings: " + length(Building);
 		
@@ -298,6 +298,7 @@ global {
 				 	if (bestCand.NOMBRE_DE_ != nil and bestCand.NOMBRE_DE_ > 0){ 
 				 		flats <- bestCand.NOMBRE_DE_;
 				 	}
+				 	self.id <- bestCand.ID;
 				 }
 			 
 			 }	
@@ -685,6 +686,7 @@ Indifférencié
 	int NOMBRE_DE_; //nombre de logements;
 	int NOMBRE_D_E;// nombre d'étages
 	float HAUTEUR; 
+	string ID;
 }
 species Building {
 	Boundary boundary;
@@ -700,7 +702,7 @@ species Building {
 	string sport_att;
 	string leisure_att;
 	float height;
-	int id;
+	string id;
 	int flats;
 	int levels;
 	rgb color;
