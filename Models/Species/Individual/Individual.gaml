@@ -21,9 +21,30 @@ species Individual skills: [scheduling/*, logging*/] {
 	/**
 	 * Personnal data
 	 */
+	 
+	// ID
+	int id;
 
 	// Age
 	int age;
+	
+	// Sexe
+	string sexe; 	
+	
+	// Role
+	string role;
+	
+	// Activity
+	string activity;
+	
+	// Education
+	string education;
+	
+	// Income
+	int income;
+	
+	// Id_household
+	int id_household;
 
 	// If true, can instantiate a car
 	bool has_car <- false;
