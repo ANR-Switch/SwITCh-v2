@@ -8,9 +8,12 @@ model switch_utilities_gis
 
 global {	
 	// define the path to the dataset folder
-	string dataset_path <- "../Dataset/Castanet/Infrastructure";
+	string dataset_path <- "../Datasets/Castanet/";
+	// Define the folder to save infrastructure (buiilding, roads...) relatively to the dataset_path
+	string infrastructure_folder <- "Infrastructure/";
+	
 	// define the path to the main project folder
-	string parameters_path <- "../../SwITCh-v2/Parameters/";
+	string parameters_path <- "../Parameters/";
 	
 	//define the bounds of the studied area
 	file data_file <-shape_file(dataset_path + "boundary.shp");
@@ -361,12 +364,12 @@ global {
 				int i <- 1;
 				loop while: not empty(bds)  {
 					list<Building> bds_ <- nb_for_building_shapefile_split first bds;
-					save bds_ to:(dataset_path+ bd.name +"/buildings_" +i+".shp") type: shp attributes: ["id"::id,"sub_area"::boundary.name,"type"::type, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
+					save bds_ to:(dataset_path + infrastructure_folder + bd.name +"/buildings_" +i+".shp") type: shp attributes: ["id"::id,"sub_area"::boundary.name,"type"::type, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
 					bds <- bds - bds_;
 					i <- i + 1;
 				}
 			} else {
-				save bds to:dataset_path+ bd.name +"/buildings.shp" type: shp attributes: ["id"::id,"sub_area"::boundary.name,"type"::type, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
+				save bds to:dataset_path + infrastructure_folder + bd.name +"/buildings.shp" type: shp attributes: ["id"::id,"sub_area"::boundary.name,"type"::type, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
 			}
 		}		
 		return buildings_per_boundary;
@@ -529,12 +532,12 @@ global {
 					int i <- 1;
 					loop while: not empty(bds)  {
 						list<Node> bds_ <- nb_for_node_shapefile_split first bds;
-						save bds_ type:"shp" to:dataset_path + bd.name +"/nodes_" +i+ ".shp" attributes:["type"::type, "crossing"::crossing, "sub_areas"::boundaries_str] ;
+						save bds_ type:"shp" to:dataset_path + infrastructure_folder + bd.name +"/nodes_" +i+ ".shp" attributes:["type"::type, "crossing"::crossing, "sub_areas"::boundaries_str] ;
 						bds <- bds - bds_;
 						i <- i + 1;
 					}
 				} else {
-					save nds type:"shp" to:dataset_path + bd.name +"/nodes.shp" attributes:["type"::type, "crossing"::crossing, "sub_areas"::boundaries_str] ;
+					save nds type:"shp" to:dataset_path +  infrastructure_folder + bd.name +"/nodes.shp" attributes:["type"::type, "crossing"::crossing, "sub_areas"::boundaries_str] ;
 				}
 			}
 		}
@@ -548,7 +551,7 @@ global {
 		
 		loop bd over: Boundary {
 			geometry s <- envelope(envelope(buildings_per_boundary[bd]), envelope(nodes_per_boundary[bd]),roads_per_boundary[bd]);
-			save s type:"shp" to: dataset_path + bd.name +"/boundary.shp" ;	
+			save s type:"shp" to: dataset_path + infrastructure_folder + bd.name +"/boundary.shp" ;	
 		}
 		
 	}
@@ -567,7 +570,7 @@ global {
 				int i <- 1;
 				loop while: not empty(bds)  {
 					list<Road> bds_ <- nb_for_road_shapefile_split first bds;
-					save bds_ type:"shp" to:dataset_path+ bd.name +"/roads_" +i+".shp" attributes:[
+					save bds_ type:"shp" to:dataset_path+ infrastructure_folder + bd.name +"/roads_" +i+".shp" attributes:[
 						"junction"::junction, "type"::type, "lanes"::self.lanes, "maxspeed"::maxspeed, "oneway"::oneway,
 						"foot"::foot, "bicycle"::bicycle, "access"::access, "bus"::bus, "parking_lane"::parking_lane, 
 						"sidewalk"::sidewalk, "cycleway"::cycleway] ;
@@ -575,7 +578,7 @@ global {
 					i <- i + 1;
 				}
 			} else {
-				save bds type:"shp" to:dataset_path+ bd.name +"/roads.shp" attributes:[
+				save bds type:"shp" to:dataset_path+ infrastructure_folder + bd.name +"/roads.shp" attributes:[
 					"junction"::junction, "type"::type, "lanes"::self.lanes, "maxspeed"::maxspeed, "oneway"::oneway,
 					"foot"::foot, "bicycle"::bicycle, "access"::access, "bus"::bus, "parking_lane"::parking_lane, 
 					"sidewalk"::sidewalk, "cycleway"::cycleway] ;
