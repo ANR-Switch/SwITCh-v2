@@ -97,6 +97,9 @@ species Road parent: IRoad {
 		// Set start and end crossroad
 		start_node <- Crossroad closest_to first(self.shape.points);
 		end_node <- Crossroad closest_to last(self.shape.points);
+//		
+//		write self;
+//		write self.shape.points;
 		
 		// TODO *********** 
 		/*switch model_type {
@@ -140,24 +143,24 @@ species Road parent: IRoad {
 		// Set border color
 		border_color <- road_model.color;
 
-		// Get translations (in order to draw two roads if there is two directions)
-		point A <- start_node.location;
-		point B <- end_node.location;
-		
-	
-		if (A = B) {
-			trans <- {0, 0};
-		} else {
-			point u <- {-(B.y - A.y) / (B.x - A.x), 1};
-			float angle <- angle_between(A, B, A + u);
-			if (angle < 150) {
-				trans <- u / norm(u);
-			} else {
-				trans <- -u / norm(u);
-			}
-
-		}
-		geom_display <- (shape) translated_by (trans * 2);
+//		// Get translations (in order to draw two roads if there is two directions)
+//		point A <- start_node.location;
+//		point B <- end_node.location;
+//		
+//	
+//		if (A = B) {
+//			trans <- {0, 0};
+//		} else {
+//			point u <- {-(B.y - A.y) / (B.x - A.x), 1};
+//			float angle <- angle_between(A, B, A + u);
+//			if (angle < 150) {
+//				trans <- u / norm(u);
+//			} else {
+//				trans <- -u / norm(u);
+//			}
+//
+//		}
+//		geom_display <- (shape) translated_by (trans * 2);
 	}
 
 	// Implement join the road

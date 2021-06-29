@@ -35,11 +35,11 @@ global {
 	string dataset <- string(config_data["datasets_root"]) + string(config_data["dataset"]);
 
 	// Get shapes
-	shape_file shape_buildings <- shape_file(dataset + "/buildings.shp");
-	shape_file shape_individuals <- shape_file(dataset + "/individuals.shp");
-	shape_file shape_nodes <- shape_file(dataset + "/nodes.shp");
-	shape_file shape_roads <- shape_file(dataset + "/roads.shp");
-	shape_file shape_boundary <- shape_file(dataset + "/boundary.shp");
+	shape_file shape_buildings <- shape_file(dataset + "/Infrastructure/CASTANET-TOLOSAN/buildings.shp");
+	csv_file shape_individuals <- csv_file(dataset + "/Population/agents.csv",true);
+	shape_file shape_nodes <- shape_file(dataset + "/Infrastructure/CASTANET-TOLOSAN/nodes.shp");
+	shape_file shape_roads <- shape_file(dataset + "/Infrastructure/CASTANET-TOLOSAN/roads.shp");
+	shape_file shape_boundary <- shape_file(dataset + "/Infrastructure/CASTANET-TOLOSAN/boundary.shp");
 
 	// Graph configuration
 	string optimizer_type <- "NBAStar" among: ["NBAStar", "NBAStarApprox", "Dijkstra", "AStar", "BellmannFord", "FloydWarshall"];
@@ -91,122 +91,132 @@ global {
 		create Building from: shape_buildings with: [id::int(read("id")), type:: read("type")];
 		write "-> " + (starting_date + (machine_time / 1000));
 
+//		// Create individuals from database
+//		write "Individual...";
+//		list<int> rds;
+//		create Individual from: shape_individuals with: [age::int(read("age")), working_place_id::int(read("work_pl")), home_place_id::int(read("home_pl"))] {
+//			add rnd(0, 28800.0) to: rds;
+//			if length(Individual) > 20000 {
+//				do die();
+//			}
+//		}		
 		// Create individuals from database
 		write "Individual...";
 		list<int> rds;
-		create Individual from: shape_individuals with: [age::int(read("age")), working_place_id::int(read("work_pl")), home_place_id::int(read("home_pl"))] {
-			add rnd(0, 28800.0) to: rds;
-			if length(Individual) > 20000 {
-				do die();
-			}
-		}		
+		create Individual from: shape_individuals /*with: [id::int(read("id")),age::int(read("age")), sex::string(read("sex")), role::string(read("role")),  activity::string(read("activity")),  education::string(read("education")),  income::int(read("income")),  id_household::int(read("id_household"))] */{
+//			add rnd(0, 28800.0) to: rds;
+			write self.age;
+//			if length(Individual) > 20000 {
+//				do die();
+//			}
+		}	
 		write "-> " + (starting_date + (machine_time / 1000));
 
-		// ############################ WIP IN PROGRESS TEST WARNING WARNING 
-		// Setup Individuals
-		write "Setup...";
-		if true {
-			file fake_agenda_json <- json_file("../Parameters/Agendas.json");
-			map<string, list<map<string, unknown>>> fake_agenda_data <- fake_agenda_json.contents;
-			
-			// Get building of each types (ONCE)
-			list<Building> study_building <- Building where (each.type = "studying");
-			list<Building> work_building <- Building where (each.type = "working");
-			list<Building> home_building <- Building where (each.type = "staying_home");
-			
-			//write study_building;
-			
-			loop activity over: list<map<string, unknown>>(fake_agenda_data["metro_boulot_dodo"]) {
-				int i <- 0;
-				date act_starting_time <- starting_date + int(activity["starting_date"]);
-				int act_type <- int(activity["activity_type"]);
-	
-				ask Individual {
-					// Add activity to all individuals
-					Activity a <- world.create_activity(act_starting_time + rds[i], act_type);
-					
-					//int random <- rnd(0, 100);
-					//if (random <= 85) {
-					//	has_car <- true;
-					//	has_bike <- true;	
-					//}
-	
-					/*if (random <= 24) {
-						a.start_date <- act_starting_time + (1800 * 0 + (1800 * rnd(0, 100) / 100));
-					} else if (random <= 50) {
-						a.start_date <- act_starting_time + (1800 * 1 + (1800 * rnd(0, 100) / 100));
-					} else if (random <= 76) {
-						a.start_date <- act_starting_time + (1800 * 2 + (1800 * rnd(0, 100) / 100));
-					} else if (random <= 94) {
-						a.start_date <- act_starting_time + (1800 * 3 + (1800 * rnd(0, 100) / 100));
-					} else if (random <= 100) {
-						a.start_date <- act_starting_time + (1800 * 4 + (1800 * rnd(0, 100) / 100));
-					}*/
-					
-					//a.start_date <- act_starting_time + (10 * (i / length(Individual)));
-					i <- i + 1;
-					
-					// If working ID exists
-					/*if working_place_id != nil and working_place_id >= 0 {
-						working_place <- Building first_with (each.id = working_place_id);
-					}
-					
-					// If home ID exists
-					if home_place_id != nil and home_place_id >= 0 {
-						home_place <- Building first_with (each.id = home_place_id);
-					}*/
-					
-					// If the working place is nil
-					//if working_place = nil {
-						if age < 18 {
-							working_place <- one_of(study_building);
-						} else if age >= 18 {
-							working_place <- one_of(work_building);
-						}
-			
-					//}
-					
-					// if the home place is nil
-					//if home_place = nil {
-						home_place <- one_of(home_building);
-					//}
-					
-					location <- any_location_in(home_place.shape);
-					
-					if a.get_activity_type_string() = "work" and working_place != nil {
-						do add_activity activity: a;						
-					} else if a.get_activity_type_string() = "studying" and working_place != nil {
-						do add_activity activity: a;						
-					} else if a.get_activity_type_string() = "familly" and home_place != nil {
-						do add_activity activity: a;						
-					} else {
-						do die();
-					}
-					
-					/*
-					if home_place = nil and age >= 18 {
-						home_place <- one_of(Building where (each.type = "staying_home"));
-					} else if home_place = nil and age < 18 {
-						Individual individual <- one_of(Individual where (each.age >= 18));
-						if (individual.home_place = nil) {
-							individual.home_place <- one_of(Building where (each.type = "staying_home"));
-						}
-	
-						home_place <- individual.home_place;
-					}
-	
-					if working_place = nil and age >= 18 {
-						working_place <- one_of(Building where (each.type = "working"));
-					} else if working_place = nil and age < 18 {
-						working_place <- one_of(Building where (each.type = "studying"));
-					}
-	
-					location <- any_location_in(home_place.shape);*/
-				}
-	
-			}
-		}
-		write "-> " + (starting_date + (machine_time / 1000));
+//		// ############################ WIP IN PROGRESS TEST WARNING WARNING 
+//		// Setup Individuals
+//		write "Setup...";
+//		if true {
+//			file fake_agenda_json <- json_file("../Parameters/Agendas.json");
+//			map<string, list<map<string, unknown>>> fake_agenda_data <- fake_agenda_json.contents;
+//			
+//			// Get building of each types (ONCE)
+//			list<Building> study_building <- Building where (each.type = "studying");
+//			list<Building> work_building <- Building where (each.type = "working");
+//			list<Building> home_building <- Building where (each.type = "staying_home");
+//			
+//			//write study_building;
+//			
+//			loop activity over: list<map<string, unknown>>(fake_agenda_data["metro_boulot_dodo"]) {
+//				int i <- 0;
+//				date act_starting_time <- starting_date + int(activity["starting_date"]);
+//				int act_type <- int(activity["activity_type"]);
+//	
+//				ask Individual {
+//					// Add activity to all individuals
+//					Activity a <- world.create_activity(act_starting_time + rds[i], act_type);
+//					
+//					//int random <- rnd(0, 100);
+//					//if (random <= 85) {
+//					//	has_car <- true;
+//					//	has_bike <- true;	
+//					//}
+//	
+//					/*if (random <= 24) {
+//						a.start_date <- act_starting_time + (1800 * 0 + (1800 * rnd(0, 100) / 100));
+//					} else if (random <= 50) {
+//						a.start_date <- act_starting_time + (1800 * 1 + (1800 * rnd(0, 100) / 100));
+//					} else if (random <= 76) {
+//						a.start_date <- act_starting_time + (1800 * 2 + (1800 * rnd(0, 100) / 100));
+//					} else if (random <= 94) {
+//						a.start_date <- act_starting_time + (1800 * 3 + (1800 * rnd(0, 100) / 100));
+//					} else if (random <= 100) {
+//						a.start_date <- act_starting_time + (1800 * 4 + (1800 * rnd(0, 100) / 100));
+//					}*/
+//					
+//					//a.start_date <- act_starting_time + (10 * (i / length(Individual)));
+//					i <- i + 1;
+//					
+//					// If working ID exists
+//					/*if working_place_id != nil and working_place_id >= 0 {
+//						working_place <- Building first_with (each.id = working_place_id);
+//					}
+//					
+//					// If home ID exists
+//					if home_place_id != nil and home_place_id >= 0 {
+//						home_place <- Building first_with (each.id = home_place_id);
+//					}*/
+//					
+//					// If the working place is nil
+//					//if working_place = nil {
+//						if age < 18 {
+//							working_place <- one_of(study_building);
+//						} else if age >= 18 {
+//							working_place <- one_of(work_building);
+//						}
+//			
+//					//}
+//					
+//					// if the home place is nil
+//					//if home_place = nil {
+//						home_place <- one_of(home_building);
+//					//}
+//					
+//					location <- any_location_in(home_place.shape);
+//					
+//					if a.get_activity_type_string() = "work" and working_place != nil {
+//						do add_activity activity: a;						
+//					} else if a.get_activity_type_string() = "studying" and working_place != nil {
+//						do add_activity activity: a;						
+//					} else if a.get_activity_type_string() = "familly" and home_place != nil {
+//						do add_activity activity: a;						
+//					} else {
+//						do die();
+//					}
+//					
+//					/*
+//					if home_place = nil and age >= 18 {
+//						home_place <- one_of(Building where (each.type = "staying_home"));
+//					} else if home_place = nil and age < 18 {
+//						Individual individual <- one_of(Individual where (each.age >= 18));
+//						if (individual.home_place = nil) {
+//							individual.home_place <- one_of(Building where (each.type = "staying_home"));
+//						}
+//	
+//						home_place <- individual.home_place;
+//					}
+//	
+//					if working_place = nil and age >= 18 {
+//						working_place <- one_of(Building where (each.type = "working"));
+//					} else if working_place = nil and age < 18 {
+//						working_place <- one_of(Building where (each.type = "studying"));
+//					}
+//	
+//					location <- any_location_in(home_place.shape);*/
+//				}
+//	
+//			}
+//		}
+//		write "-> " + (starting_date + (machine_time / 1000));
 		// ############################ WARNING WARNING WIP IN PROGRESS TEST 
 		
 		// TODO ???????? wtf because Agents are not scheduled

@@ -29,7 +29,7 @@ species Individual skills: [scheduling/*, logging*/] {
 	int age;
 	
 	// Sexe
-	string sexe; 	
+	string sex; 	
 	
 	// Role
 	string role;
