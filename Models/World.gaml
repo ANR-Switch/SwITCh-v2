@@ -21,6 +21,11 @@ global {
 
 	// If true set all mixed road to micro
 	bool micro_level <- false;
+	
+	// Do we compute all the shortest path?
+	
+	bool save_shortest_paths <- false;
+	bool load_shortest_paths <- true;
 
 	// Starting date of the simulation 
 	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
@@ -78,6 +83,17 @@ global {
 
 		//allows to define if the shortest paths computed should be memorized (in a cache) or not
 		full_network <- full_network use_cache memorize_shortest_paths;
+	
+		string shortest_paths_file <- "shortest_paths.csv";
+		
+		if save_shortest_paths {
+			matrix ssp <- all_pairs_shortest_path(full_network);
+			save ssp type:"text" to:shortest_paths_file;
+			
+		//loads the file of the shortest paths as a matrix and uses it to initialize all the shortest paths of the graph
+		} else if load_shortest_paths {
+			full_network <- full_network load_shortest_paths matrix(file(shortest_paths_file));
+		}
 		
 		// Setup the graphique representation
 		ask Road {
