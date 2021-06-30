@@ -79,7 +79,7 @@ global {
 
 	
 		create Building from: ggs with:[building_att:: get("building"),shop_att::get("shop"), historic_att::get("historic"), amenity_att::get("amenity"),
-			office_att::get("office"), military_att::get("military"),sport_att::get("sport"),leisure_att::get("lesure"),
+			office_att::get("office"), military_att::get("military"),sport_att::get("sport"),leisure_att::get("leisure"),
 			height::float(get("height")), flats::int(get("building:flats")), levels::int(get("building:levels"))
 		] {
 			shape <- shape simplification simplification_dist ;
@@ -220,16 +220,15 @@ global {
 
 	action blg_assign_types {
 		ask Building where ((each.shape.area = 0) and (each.shape.perimeter = 0)) parallel: parallel {
-			if(self.shop_att !=nil)  {write sample(self.shop_att);}
 			list<Building> bd <- Building overlapping self;
 			ask bd where (each.shape.area > 0) {
-				sport_att  <- myself.sport_att;
-				office_att  <- myself.office_att;
-				military_att  <- myself.military_att;
-				leisure_att  <- myself.leisure_att;
-				amenity_att  <- myself.amenity_att;
-				shop_att  <- myself.shop_att;
-				historic_att <- myself.historic_att;
+				if (myself.sport_att != nil) {		types << myself.sport_att; }
+				if (myself.office_att != nil) {		types << myself.office_att; }
+				if (myself.military_att != nil) {	types << myself.military_att; }
+				if (myself.leisure_att != nil) {		types << myself.leisure_att; }
+				if (myself.amenity_att != nil) {	types << myself.amenity_att;  }
+				if (myself.shop_att != nil) {			types << myself.shop_att;}
+				if (myself.historic_att != nil) {	types << myself.historic_att;}
 			}
 		}
 		write "		Buildings: information from other layers (point buildings) integrated";
@@ -337,7 +336,7 @@ global {
 			}
 			
 			if (length(types) > 1) {
-				loop i from: 0 to: length(types) - 1 {
+				loop i from: 1 to: length(types) - 1 {
 					types_str <-types_str + "," + types[i] ;
 				}
 			}

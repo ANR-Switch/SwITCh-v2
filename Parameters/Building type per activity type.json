@@ -21,6 +21,7 @@
     "eating": [
         "restaurant",
         "cafe",
+        "coffee",
         "fast_food",
         "bar",
         "bakery",
@@ -67,7 +68,8 @@
         "estate_agent",
         "pharmacy",
         "antiques",
-        "marketplace"
+        "marketplace",
+        "doityourself",
     ],
     "First necessity shoping": [
         "commercial",
@@ -80,6 +82,7 @@
     "leisure": [
         "theatre",
         "casino",
+        "cinema",
         "bar",
         "arts_centre",
         "massage",
@@ -87,14 +90,18 @@
         "boules",
         "Piste de sport",
         "sport",
+        "garden",
         "Terrain de tennis",
         "Bassin de natation",
         "Bâtiment sportif",
         "fitness",
+        "fitness_centre",
         "equestrian",
         "gymnastics",
         "rugby_league",
+        "playground",
         "soccer",
+        "sports_centre",
         "tennis",
         "pelota",
         "skateboard",
@@ -104,13 +111,15 @@
         "climbing;handball;volleyball;gymnastics",
         "sports_hall",
         "swimming",
+        "swimming_pool",
         "basketball"
     ],
     "health related activity": [
         "doctors",
         "hospital",
         "chemist",
-        "nursery"
+        "nursery",
+        "veterinary"
     ],
     "other activity": [
         "cimetière",
@@ -156,6 +165,7 @@
         "1",
         "2",
         "3",
+        "4",
         "5",
         "6",
         "7",
