@@ -102,7 +102,7 @@ species IndividualDecision parent: Individual{
 	//calcul pour chaque valeur
 	float compute_value(string type, string criterion){ //compute contextual value according to mode and criteria
 		
-		float distance<- location distance_to target_point;
+		float distance<- location distance_to current_trip.target;
 			
 		float time_bike <- distance/bike_speed+0.1;
 		float time_car <- distance/car_speed+0.1;
