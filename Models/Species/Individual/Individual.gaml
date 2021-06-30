@@ -35,7 +35,7 @@ species Individual skills: [scheduling/*, logging*/] {
 	string role;
 	
 	// Activity
-	string activity;
+	string profile;
 	
 	// Education
 	string education;
@@ -45,6 +45,10 @@ species Individual skills: [scheduling/*, logging*/] {
 	
 	// Id_household
 	int id_household;
+
+	// ID building	
+	// TODO to remove
+	string id_building;
 
 	// If true, can instantiate a car
 	bool has_car <- false;

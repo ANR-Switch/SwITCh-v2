@@ -27,7 +27,7 @@ global {
  */
 species Building {
 	// Building ID
-	int id;
+	string id;
 
 	// Type
 	string type <- blg_type_default;
