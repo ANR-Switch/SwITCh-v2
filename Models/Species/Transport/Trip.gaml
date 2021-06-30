@@ -96,7 +96,7 @@ species Trip {
 	// Get all transport of current road
 	list<Transport> get_current_road_transports {	
 		if current_road != nil {
-			return current_road.road_model.get_transports();	
+			return current_road.get_transports();	
 		} else {
 			return [];
 		}
@@ -105,7 +105,7 @@ species Trip {
 	// Get all transport of the next road
 	list<Transport> get_next_road_transports {	
 		if next_road != nil {
-			return next_road.road_model.get_transports();	
+			return next_road.get_transports();	
 		} else {
 			return [];
 		}

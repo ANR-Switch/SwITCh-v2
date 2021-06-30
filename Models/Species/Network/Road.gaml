@@ -6,16 +6,13 @@
 */
 model SwITCh
 
-import "../IRoad.gaml"
-import "../Model/RoadModel/RoadModel.gaml"
-import "../Model/RoadModel/Implementations/SimpleQueuedRoadModel.gaml"
 import "../Network/Road.gaml"
 import "../Network/Crossroad.gaml"
 
 /** 
  * Road virtual species
  */
-species Road parent: IRoad {
+species Road skills: [scheduling] {
 
 	// Type of road (the OpenStreetMap highway feature: https://wiki.openstreetmap.org/wiki/Map_Features)
 	string type;
@@ -56,14 +53,8 @@ species Road parent: IRoad {
 	// Used to double the roads (to have two distinct roads if this is not a one-way road)
 	point trans;
 
-	// Model type
-	string model_type <- "simple" among: ["simple", "micro", "queued-simple", "queued-micro"];
-
 	// Border color
 	rgb border_color <- #grey;
-
-	// The model
-	RoadModel road_model;
 
 	// Start crossroad node
 	Crossroad start_node;
@@ -86,87 +77,65 @@ species Road parent: IRoad {
 	// First and last points
 	point start;
 	point end;
+	
+	// The event manager
+	agent event_manager <- EventManager[0];
+	
+	// The list of transport in this road
+	queue<Transport> transports;
+
+	// Waiting queue
+	queue<Transport> waiting_transports;
+
+	// Request time of each transport
+	map<Transport, date> request_times;
+
+	// Outflow duration
+	float outflow_duration <- 1 / (600 / 60) #s;
+
+	// Last out date
+	date last_out <- nil;
 
 	// Init the road
 	init {
 		// Set start and end crossroad
 		start_node <- Crossroad closest_to first(self.shape.points);
 		end_node <- Crossroad closest_to last(self.shape.points);
-//		
-//		write self;
-//		write self.shape.points;
-		
-		// TODO *********** 
-		/*switch model_type {
-			match "simple" {
-				road_model <- world.create_simple_road_model(self);
-			}
-			match "micro" {
-				road_model <- world.create_micro_road_model(self);
-			}
-			match "queued-simple" {
-				road_model <- world.create_simple_queue_road_model(self);
-			}
-			match "queued-micro" {
-				road_model <- world.create_micro_queue_road_model(self);
-			}
-		}
-		*/
-		switch type {
-			match "residential" {
-				//road_model <- world.create_micro_idm_road_model(self);
-				//road_model <- world.create_micro_event_queue_road_model(self);
-				//road_model <- world.create_micro_queue_road_model(self);
-				//road_model <- world.create_micro_road_model(self);
-				//road_model <- world.create_simple_road_model(self);
-				road_model <- world.create_simple_queue_road_model(self);				
-			}
-
-			default {
-				//road_model <- world.create_micro_idm_road_model(self);
-				//road_model <- world.create_micro_event_queue_road_model(self);
-				//road_model <- world.create_micro_queue_road_model(self);
-				//road_model <- world.create_micro_road_model(self);
-				//road_model <- world.create_simple_road_model(self);
-				road_model <- world.create_simple_queue_road_model(self);
-			}
-
-		}
-		//road_model <- world.create_simple_road_model(self);
-		// ***********
 
 		// Set border color
-		border_color <- road_model.color;
-
-//		// Get translations (in order to draw two roads if there is two directions)
-//		point A <- start_node.location;
-//		point B <- end_node.location;
-//		
-//	
-//		if (A = B) {
-//			trans <- {0, 0};
-//		} else {
-//			point u <- {-(B.y - A.y) / (B.x - A.x), 1};
-//			float angle <- angle_between(A, B, A + u);
-//			if (angle < 150) {
-//				trans <- u / norm(u);
-//			} else {
-//				trans <- -u / norm(u);
-//			}
-//
-//		}
-//		geom_display <- (shape) translated_by (trans * 2);
+		border_color <- #green;
 	}
 
 	// Implement join the road
 	action join (Transport transport, date request_time, bool waiting) {
-		ask road_model {
-			do join(transport, request_time, waiting);
+		if waiting {
+			do push_in_waiting_queue(transport);
+		} else {
+			ask transport {
+				myself.current_capacity <- myself.current_capacity - size;
+				do update_positions(first(myself.start).location);
+			}
+
+			// Ask the transport to change road when the travel time is reached
+			ask transport {
+				do update_positions(myself.location);
+			}
+
+			// Compute travel time
+			float travel_time <- transport.compute_straight_forward_duration_through_road(self, transport.get_current_target());
+		
+			// Add data
+			do add_request_time_transport(transport, (request_time + travel_time));
+
+			// If this is the first transport
+			if length(transports) = 1 {
+				do check_first_agent(request_time);
+			}
 		}
 		
 		// If capacity is over 75% then traffic jam
 		if ((max_capacity - current_capacity) / max_capacity) > jam_treshold and (max_capacity > 25.0) {
-			ask road_model.get_transports() {
+			ask get_transports() {
 				jam_start <- request_time;
 			}
 		}
@@ -177,7 +146,7 @@ species Road parent: IRoad {
 	action leave (Transport transport, date request_time) {
 		// If capacity is lower than 50% then not traffic jam
 		if current_capacity / max_capacity <= 0.5 {
-			ask road_model.get_transports() {
+			ask get_transports() {
 				if jam_duration = nil or jam_start = nil {
 					jam_duration <- 0.0;
 				} else {
@@ -186,35 +155,21 @@ species Road parent: IRoad {
 			}
 		}
 		
-		ask road_model {
-			do leave(transport, request_time);
-		}
-	}
+		// Remove transport (pop first)
+		do remove_transport(transport);
 
-	// Implement true if this road has capacity
-	bool has_capacity (Transport transport) {
-		return road_model.has_capacity(transport);
-	}
-	
-	// Implement true if this road has capacity
-	bool check_if_exists (Transport transport) {
-		return road_model.check_if_exists(transport);
+		// Update capacity
+		ask transport {
+			myself.current_capacity <- myself.current_capacity + size;
+		}
+
+		// Check and add transport
+		do check_waiting(request_time);
 	}
 
 	// Implement get size
 	float get_size {
 		return shape.perimeter;
-	}
-
-	// Implement get max freeflow speed
-	float get_max_freeflow_speed (Transport transport) {
-		return road_model.get_max_freeflow_speed(transport);
-	}
-	
-	// Compute the travel of incoming transports
-	// The formula used is BPR equilibrium formula
-	float get_road_travel_time (Transport transport, float distance_to_target) {
-		return road_model.get_road_travel_time(transport, distance_to_target);
 	}
 
 	// Implement get free flow travel time in secondes (time to cross the road when the speed of the transport is equals to the maximum speed)
@@ -225,6 +180,173 @@ species Road parent: IRoad {
 			return distance_to_target / get_max_freeflow_speed(transport);			
 		}
 	}
+
+	/**
+	 * Handlers collections
+	 */
+
+	// Add transport to waiting queue
+	action push_in_waiting_queue (Transport transport) {
+		push item: transport to: waiting_transports;
+	}
+
+	// Add new transport
+	action add_transport (Transport transport) {
+		push item: transport to: transports;
+	}
+
+	// Add request time transport
+	action add_request_time_transport (Transport transport, date request_time) {
+		do add_transport(transport);
+		add request_time at: transport to: request_times;
+	}
+
+	// Implementation get transports
+	list<Transport> get_transports {
+		return list(transports);
+	}
+
+	// Remove transport
+	action remove_transport (Transport transport) {
+		Transport first <- pop(transports);
+		remove key: first from: request_times;
+	}
+
+	// Clear transports
+	action clear_transports {
+		loop transport over: transports {
+		// Remove event from the event manager
+			ask transport {
+				do clear_events;
+			}
+
+		}
+
+		remove key: transports from: request_times;
+		remove from: transports all: true;
+	}
+	
+	// Exit signal
+	action exit_signal {
+		do exit(refer_to as Transport, event_date);
+	}
+
+	// Exit action
+	action exit (Transport transport, date request_time) {
+		last_out <- request_time;
+		ask transport {
+			do update_positions(myself.end);
+			do change_road(request_time);
+		}
+
+	}
+
+	// Implement end
+	action end_road (Transport transport, date request_time) {
+		if last_out = nil {
+			do exit(transport, request_time);
+		} else {
+			float delta <- (request_time - last_out);
+			if delta >= outflow_duration {
+				do exit(transport, request_time);
+			} else {
+				// If the transport has crossed the road
+				date signal_date <- request_time + (outflow_duration - delta);
+
+				// If the signal date is equals to the actual step date then execute it directly
+				if signal_date = (starting_date + time) {
+					do exit(transport, request_time + (outflow_duration - delta));
+				} else {
+					do later the_action: exit_signal at: request_time + (outflow_duration - delta) refer_to: transport;
+				}
+
+			}
+
+		}
+
+	}
+
+	// Implement end
+	action end_road_signal {
+		do end_road(refer_to as Transport, event_date);
+	}
+
+	/**
+	 * Waiting agents
+	 */
+
+	// Check waiting agents
+	action check_waiting (date request_time) {
+		do check_first_agent(request_time);
+		if length(waiting_transports) > 0 {
+			do add_waiting_agents(request_time);
+		}
+
+	}
+
+	// Check first transport
+	action check_first_agent (date request_time) {
+		if not empty(transports) {
+			Transport transport <- first(transports);
+			date end_road_date;
+			if request_time > request_times[transport] {
+				end_road_date <- request_time;
+			} else {
+				end_road_date <- request_times[transport];
+			}
+
+			if end_road_date = (starting_date + time) {
+				do end_road(transport, end_road_date);
+			} else {
+				do later the_action: end_road_signal at: end_road_date refer_to: transport;
+			}
+
+		}
+
+	}
+
+	// Check if there is waiting agents and add it if it's possible
+	action add_waiting_agents (date request_time) {
+		// Check if waiting tranport can be join the road
+		loop while: not empty(waiting_transports) and has_capacity(first(waiting_transports)) {
+			// Get first transport			
+			ask pop(waiting_transports) {
+				do inner_change_road(myself, request_time);
+			}
+
+		}
+
+	}
+
+	/**
+	 * Utilities
+	 */
+	 
+	// Compute the travel of incoming transports
+	// The formula used is BPR equilibrium formula
+	float get_road_travel_time (Transport transport, float distance_to_target) {
+		float free_flow_travel_time <- get_free_flow_travel_time(transport, distance_to_target);
+		float ratio <- ((max_capacity - current_capacity) / max_capacity);
+		float travel_time <- free_flow_travel_time * (1.0 + 0.15 * ratio ^ 4);
+		return travel_time with_precision 3;
+	}
+
+	// Just the current capacity
+	bool has_capacity (Transport transport) {
+		return current_capacity >= transport.size;
+	}
+
+	// True if already in the road
+	bool check_if_exists (Transport transport) {
+		list<Transport> tmp <- (transports + waiting_transports) where (each = transport);
+		return length(tmp) > 0;
+	}
+
+	// Implement get max freeflow speed
+	float get_max_freeflow_speed (Transport transport) {
+		return min([transport.max_speed, max_speed]) #km / #h;
+	}
+
 		
 	// Setup
 	action setup {

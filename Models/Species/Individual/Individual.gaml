@@ -8,7 +8,6 @@ model SwITCh
 
 import "../Transport/Private/Walk.gaml"
 import "../Transport/Private/Car.gaml"
-import "../Transport/Private/Bike.gaml"
 import "../Transport/Trip.gaml"
 import "../Building.gaml"
 import "Agenda.gaml"
@@ -16,7 +15,7 @@ import "Agenda.gaml"
 /** 
  * Individuals species
  */
-species Individual skills: [scheduling/*, logging*/] {
+species Individual skills: [scheduling] {
 
 	/**
 	 * Personnal data
@@ -87,9 +86,6 @@ species Individual skills: [scheduling/*, logging*/] {
 
 	// The event manager
 	agent event_manager <- EventManager[0];
-	
-	// Logbook
-	//agent logbook <- Logbook[0];
 
 	// The chain of trips from start to end location
 	queue<Trip> trip_chain;
@@ -175,38 +171,8 @@ species Individual skills: [scheduling/*, logging*/] {
 	// Create transport trip 
 	// TODO distance is arbitrary, we must define a better strategy -> a model of decision making
 	action compute_trip_chain (Building target_building) {
-		// #################################
 		Transport transport <- nil;
 		point target <- any_location_in(target_building.shape);
-
-		/*
-		float distance <- location distance_to target;
-		if false {
-			if not has_car and not has_bike {
-				transport <- world.create_walk();
-			} else if has_car and not has_bike {
-				if distance > 5.0 #km {
-					transport <- world.create_car();
-				} else {
-					transport <- world.create_walk();
-				}
-			} else if not has_car and has_bike {
-				if distance > 5.0 #km {
-					transport <- world.create_bike();
-				} else {
-					transport <- world.create_walk();
-				}
-			} else if has_car and has_bike {
-				if distance > 5.0 #km {
-					transport <- world.create_car();
-				} else if distance > 0.5 #km {
-					transport <- world.create_bike();
-				} else {
-					transport <- world.create_walk();
-				}
-			}
-		}*/
-		// #################################
 
 		// Create and add first (and the only one) trip
 		transport <- world.create_car();
@@ -238,9 +204,6 @@ species Individual skills: [scheduling/*, logging*/] {
 			// Clean last trip
 			do kill_trip;
 			do pop_activity;
-			
-			// End activity time
-			//do log_plot_2d agent_name: name date: starting_date + time data_name: "travel" x: "end" y: string(starting_date + time);
 		}
 
 	}
@@ -272,8 +235,6 @@ species Individual skills: [scheduling/*, logging*/] {
 		// Compute and execute first trip
 		do compute_trip_chain(target);		
 		do execute_trip_chain(start_time);
-		// Start activity time
-		//do log_plot_2d agent_name: name date: starting_date + time data_name: "travel" x: "start" y: string(starting_date + time);
 	}
 
 	/**
