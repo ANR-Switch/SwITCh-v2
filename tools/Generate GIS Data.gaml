@@ -60,7 +60,7 @@ global {
 		write "Start the pre-processing process";
 		
 		do create_boundary;				
-		write "Boundary: agents created. Booundary: " + length(Boundary);
+		write "Boundary: agents created. Boundary: " + length(Boundary);
 		
 		osm_file osmfile <- retrieve_osm_data();
 		write "OSM data retrieved";
@@ -87,14 +87,17 @@ global {
 		}
 		write "Buildings: agents created. Buildings: " + length(Building);
 		
-		do blg_remove_outside_and_small_buildings;
-		write "Buildings: outside and too small buildings removed. Buildings: " + length(Building);
+		do blg_remove_outside_buildings;
+		write "Buildings: outside  buildings removed. Buildings: " + length(Building);
 		
 		do blg_assign_types;
 		write "Buildings: types assigned.";
 		
+		do blg_remove_small_buildings;
+		write "Buildings:  too small buildings removed. Buildings: " + length(Building);
+		
 		do blg_update_from_ign_data;
-		write "Buildings: updated from IGN the building datasset.";
+		write "Buildings: updated from IGN the building dataset.";
 		
 		do blg_compute_type	;
 		write "Buildings: compute the main type.";
@@ -194,7 +197,7 @@ global {
 		return osmfile;
 	}
 
-	action blg_remove_outside_and_small_buildings {
+	action blg_remove_outside_buildings {
 		ask Building {
 			list<Boundary> bds <- (Boundary overlapping location);
 			if empty(bds){
@@ -205,16 +208,19 @@ global {
 		}
 		
 		write "		Buildings outside of the boundary removed";
-		
+	}
+	
+	action blg_remove_small_buildings {
 		ask Building where (each.shape.area < min_area_buildings) {
 			do die;
 		}
 		
 		write "		Too small building removed ";	
-	}
+	}	
 
 	action blg_assign_types {
 		ask Building where ((each.shape.area = 0) and (each.shape.perimeter = 0)) parallel: parallel {
+			if(self.shop_att !=nil)  {write sample(self.shop_att);}
 			list<Building> bd <- Building overlapping self;
 			ask bd where (each.shape.area > 0) {
 				sport_att  <- myself.sport_att;
