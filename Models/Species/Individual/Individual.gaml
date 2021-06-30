@@ -35,7 +35,7 @@ species Individual skills: [scheduling/*, logging*/] {
 	string role;
 	
 	// Activity
-	string activity;
+	string profile;
 	
 	// Education
 	string education;
