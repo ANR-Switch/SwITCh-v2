@@ -202,6 +202,7 @@ species Individual skills: [scheduling/*, logging*/] {
 
 			// Clean last trip
 			do kill_trip;
+			do pop_activity;
 			
 			// End activity time
 			//do log_plot_2d agent_name: name date: starting_date + time data_name: "travel" x: "end" y: string(starting_date + time);
@@ -216,9 +217,16 @@ species Individual skills: [scheduling/*, logging*/] {
 	// Add activity in agenda
 	action add_activity (Activity activity) {
 		ask my_agenda {
-			do add_activity activity: activity individual: myself;
+			do add_activity activity: activity;
 		}
 
+	}
+	
+	// Pop activity and schedule
+	action pop_activity {
+		ask my_agenda {
+			do pop_activity individual: myself;
+		}
 	}
 
 	// Compute activity

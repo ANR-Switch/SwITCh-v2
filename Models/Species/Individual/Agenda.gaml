@@ -28,15 +28,23 @@ global {
  */
 species Agenda {
 	// The list of activities
-	list<Activity> agenda <- [];
+	queue<Activity> agenda <- [];
 	
 	// Add a new activity and schedule it
-	action add_activity (Activity activity, Individual individual) {
-		add activity to: agenda;
-		ask activity {
-			do schedule individual: individual;
+	action add_activity (Activity activity) {
+		push item: activity to: agenda;
+	}
+	
+	// Pop and schedule activity
+	action pop_activity(Individual individual) {
+		if length(agenda) != 0 {	
+			Activity a <- pop(agenda);
+			ask a {
+				do schedule individual: individual;
+			}
+			
 		}
-
+		
 	}
 
 }
