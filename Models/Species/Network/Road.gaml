@@ -8,12 +8,7 @@ model SwITCh
 
 import "../IRoad.gaml"
 import "../Model/RoadModel/RoadModel.gaml"
-import "../Model/RoadModel/SimpleModel/SimpleRoadModel.gaml"
-import "../Model/RoadModel/SimpleModel/MicroRoadModel.gaml"
-import "../Model/RoadModel/QueuedModel/SimpleQueuedRoadModel.gaml"
-import "../Model/RoadModel/QueuedModel/MicroQueuedRoadModel.gaml"
-import "../Model/RoadModel/QueuedModel/MicroQueuedRoadIdmModel.gaml"
-import "../Model/RoadModel/QueuedModel/MicroEventQueuedRoadModel.gaml"
+import "../Model/RoadModel/Implementations/SimpleQueuedRoadModel.gaml"
 import "../Network/Road.gaml"
 import "../Network/Crossroad.gaml"
 

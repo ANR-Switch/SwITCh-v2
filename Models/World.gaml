@@ -6,7 +6,6 @@
 */
 model SwITCh
 
-import "Species/Model/RoadModel/QueuedModel/MicroQueuedRoadIdmModel.gaml"
 import "Utilities/EventManager.gaml"
 import "Species/Individual/Individual.gaml"
 import "Species/Building.gaml"
@@ -23,8 +22,8 @@ global {
 	bool micro_level <- false;
 
 	// Starting date of the simulation 
-	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
-	float step <- 1#seconds;
+	date starting_date <- date([1970, 1, 1, 7, 0, 0]);
+	float step <- 60 #seconds;
 	float seed <- 424242.0;
 
 	// Get general configuration
@@ -55,8 +54,8 @@ global {
 	init {
 		// Only one event manager
 		write "Utilities...";
-		create EventManager;
-		create Logbook;
+		create EventManager number: 1;
+		//create Logbook;
 		write "-> " + (starting_date + (machine_time / 1000));
 
 		// Create nodes (must be defined before roads in order to build the road with two crossroads) TODO OSM data ?
@@ -70,6 +69,11 @@ global {
 		write "-> " + (starting_date + (machine_time / 1000));
 
 		write "Graph...";
+		
+	 	// Do we compute all the shortest path?
+	 	bool save_shortest_paths <- false;
+	 	bool load_shortest_paths <- true;
+	 	
 		// Get networks		
 		full_network <- as_driving_graph(Road, Crossroad);
 
@@ -78,6 +82,17 @@ global {
 
 		//allows to define if the shortest paths computed should be memorized (in a cache) or not
 		full_network <- full_network use_cache memorize_shortest_paths;
+		
+		string shortest_paths_file <- "shortest_paths.csv";
+
+ 		if save_shortest_paths {
+ 			matrix ssp <- all_pairs_shortest_path(full_network);
+ 			save ssp type:"text" to:shortest_paths_file;
+
+ 		//loads the file of the shortest paths as a matrix and uses it to initialize all the shortest paths of the graph
+ 		} else if load_shortest_paths {
+ 			full_network <- full_network load_shortest_paths matrix(file(shortest_paths_file));
+ 		}
 		
 		// Setup the graphique representation
 		ask Road {
@@ -102,7 +117,7 @@ global {
 //		}		
 		// Create individuals from database
 		write "Individual...";
-		list<int> rds;
+		//list<int> rds;
 				
 		create Individual from: shape_individuals with: [id::int(get("id")),age::int(get("age")), sex::string(get("sex")), role::string(get("role")),  activity::string(get("activity")),  education::string(get("education")),  income::int(get("income")),  id_household::int(get("id_household"))] {
 //			add rnd(0, 28800.0) to: rds;
@@ -217,20 +232,14 @@ global {
 //			}
 //		}
 //		write "-> " + (starting_date + (machine_time / 1000));
+		
 		// ############################ WARNING WARNING WIP IN PROGRESS TEST 
 		
 		// TODO ???????? wtf because Agents are not scheduled
-		create TransportMovingGippsWrapper {
-			do die;
-		}
 		
-		create TransportMovingIdmWrapper {
+		/*create TransportMovingIdmWrapper {
 			do die;
-		}
-		
-		create TransportMovingGippsEventWrapper {
-			do die;
-		}
+		}*/
 
 		create Walk {
 			do die;
@@ -261,10 +270,8 @@ experiment "SwITCh" type: gui {
 			species Bike;
 			species Individual;
 			
-			species TransportMovingGippsWrapper;
-			species TransportMovingIdmWrapper;
-			species TransportMovingGippsEventWrapper;
-			species MicroQueuedRoadIdmModel;
+			//species TransportMovingIdmWrapper;
+			//species MicroQueuedRoadIdmModel;
 		}
 
 	}

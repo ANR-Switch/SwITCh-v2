@@ -17,7 +17,7 @@ import "../Individual/Individual.gaml"
  * 
  * Can schedule actions (scheduling skill) using the action 'later'
  */
-species Transport virtual: true skills: [scheduling, logging] {
+species Transport virtual: true skills: [scheduling/*, logging*/] {
 
 	/**
 	 * Transport data
@@ -49,7 +49,7 @@ species Transport virtual: true skills: [scheduling, logging] {
 	agent event_manager <- EventManager[0];
 	
 	// Logbook
-	agent logbook <- Logbook[0];
+	//agent logbook <- Logbook[0];
 
 	// Current trip
 	Trip current_trip <- nil;
@@ -87,6 +87,7 @@ species Transport virtual: true skills: [scheduling, logging] {
 		ask network {
 			do compute(from_location, to_location);
 		}
+		
 
 		ask current_trip {
 			do setup();
@@ -99,6 +100,9 @@ species Transport virtual: true skills: [scheduling, logging] {
 		bool ret;
 		ask network {
 			ret <- pre_compute(from_location, to_location);
+			/*ask path_to_target {
+				write name + " : " + get_size();
+			}*/
 		}
 
 		if ret {
@@ -111,7 +115,6 @@ species Transport virtual: true skills: [scheduling, logging] {
 			// The graph is not perfect and sometime,
 			// some buildings are not reachable
 			ask current_trip.individual {
-				write "caca";
 				do die();
 			}
 
@@ -264,7 +267,7 @@ species Transport virtual: true skills: [scheduling, logging] {
 						jam_duration <- nil;
 						jam_start <- nil;
 					} else {
-						write name;
+						//write name;
 						write "Something wrong, time is null";
 					}
 					entry_time <- request_time;
