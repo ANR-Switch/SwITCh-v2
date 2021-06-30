@@ -23,7 +23,7 @@ species Crossroad {
 	list<string> sub_areas;
 	
 	// Waiting time
-	float waiting_time <- 0.0;//rnd(10)#second;
+	float waiting_time <- 0.0;
 		
 	// For now just the presence or not of transports
 	bool is_available {

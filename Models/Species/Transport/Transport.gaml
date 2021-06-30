@@ -7,8 +7,6 @@
 model SwITCh
 
 import "../../Utilities/EventManager.gaml"
-import "../../Utilities/Logbook.gaml"
-import "../Model/Transport/TransportModel.gaml"
 import "../Network/Network.gaml"
 import "../Individual/Individual.gaml"
 
@@ -17,7 +15,7 @@ import "../Individual/Individual.gaml"
  * 
  * Can schedule actions (scheduling skill) using the action 'later'
  */
-species Transport virtual: true skills: [scheduling/*, logging*/] {
+species Transport virtual: true skills: [scheduling] {
 
 	/**
 	 * Transport data
@@ -41,9 +39,6 @@ species Transport virtual: true skills: [scheduling/*, logging*/] {
 	/**
 	 * Computation data
 	 */
-
-	// Transport model (can be nil if there is not specific model)
-	TransportModel transport_model;
 
 	// The event manager
 	agent event_manager <- EventManager[0];
@@ -129,7 +124,7 @@ species Transport virtual: true skills: [scheduling/*, logging*/] {
 
 	// Passenger get in the transport
 	bool get_in (Individual i) {
-	// Can't be more than the max capacity
+		// Can't be more than the max capacity
 		if (length(passengers) < max_passenger) {
 			add item: i to: passengers;
 			return true;

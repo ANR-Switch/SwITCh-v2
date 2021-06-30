@@ -17,12 +17,8 @@ import "Species/Transport/Private/Car.gaml"
  * Setup the world
  */
 global {
-
-	// If true set all mixed road to micro
-	bool micro_level <- false;
 	
 	// Do we compute all the shortest path?
-	
 	bool save_shortest_paths <- false;
 	bool load_shortest_paths <- true;
 
@@ -81,7 +77,6 @@ global {
 		write "-> " + (starting_date + (machine_time / 1000));
 
 		write "Graph...";
-	 	
 		// Get networks		
 		full_network <- as_driving_graph(Road, Crossroad);
 
@@ -97,7 +92,7 @@ global {
 			matrix ssp <- all_pairs_shortest_path(full_network);
 			save ssp type:"text" to:shortest_paths_file;
 			
-		//loads the file of the shortest paths as a matrix and uses it to initialize all the shortest paths of the graph
+		// Loads the file of the shortest paths as a matrix and uses it to initialize all the shortest paths of the graph
 		} else if load_shortest_paths {
 			full_network <- full_network load_shortest_paths matrix(file(shortest_paths_file));
 		}
@@ -106,7 +101,7 @@ global {
  			matrix ssp <- all_pairs_shortest_path(full_network);
  			save ssp type:"text" to:shortest_paths_file;
 
- 		//loads the file of the shortest paths as a matrix and uses it to initialize all the shortest paths of the graph
+ 		// Loads the file of the shortest paths as a matrix and uses it to initialize all the shortest paths of the graph
  		} else if load_shortest_paths {
  			full_network <- full_network load_shortest_paths matrix(file(shortest_paths_file));
  		}
@@ -128,13 +123,13 @@ global {
 				
 		create Individual from: mobisim_individuals with: [id_building :: string(get("id_building")),id::int(get("id")),age::int(get("age")), sex::string(get("sex")), role::string(get("role")),  profile::string(get("activity")),  education::string(get("education")),  income::int(get("income")),  id_household::int(get("id_household"))] {
 			home_place <- Building first_with(each.id = id_building);
-			if(home_place = nil or length(Individual) > 500) {
+			if(home_place = nil or length(Individual) >= 10000) {
 				do die;
 			}  else {
 				location <- any_location_in(home_place);
 			}
 		}	
-		write sample(length(Individual));
+		//write sample(length(Individual));
 		write "-> " + (starting_date + (machine_time / 1000));
 
 		// ############################ WIP IN PROGRESS TEST WARNING WARNING 
@@ -148,64 +143,22 @@ global {
 			list<Building> study_building <- Building where (each.type = "studying");
 			list<Building> work_building <- Building where (each.type = "working");
 			list<Building> home_building <- Building where (each.type = "staying_home");
-			
-			//write study_building;
-			
+						
 			loop activity over: list<map<string, unknown>>(fake_agenda_data["metro_boulot_dodo"]) {
-				int i <- 0;
 				date act_starting_time <- starting_date + int(activity["starting_date"]);
 				int act_type <- int(activity["activity_type"]);
 	
 				ask Individual {
 					// Add activity to all individuals
 					Activity a <- world.create_activity(act_starting_time + 1.0, act_type);
-					
-					//int random <- rnd(0, 100);
-					//if (random <= 85) {
-					//	has_car <- true;
-					//	has_bike <- true;	
-					//}
-	
-					/*if (random <= 24) {
-						a.start_date <- act_starting_time + (1800 * 0 + (1800 * rnd(0, 100) / 100));
-					} else if (random <= 50) {
-						a.start_date <- act_starting_time + (1800 * 1 + (1800 * rnd(0, 100) / 100));
-					} else if (random <= 76) {
-						a.start_date <- act_starting_time + (1800 * 2 + (1800 * rnd(0, 100) / 100));
-					} else if (random <= 94) {
-						a.start_date <- act_starting_time + (1800 * 3 + (1800 * rnd(0, 100) / 100));
-					} else if (random <= 100) {
-						a.start_date <- act_starting_time + (1800 * 4 + (1800 * rnd(0, 100) / 100));
-					}*/
-					
-					//a.start_date <- act_starting_time + (10 * (i / length(Individual)));
-					i <- i + 1;
-					
-					// If working ID exists
-					/*if working_place_id != nil and working_place_id >= 0 {
-						working_place <- Building first_with (each.id = working_place_id);
+				
+					if age < 18 {
+						working_place <- one_of(study_building);
+					} else if age >= 18 {
+						working_place <- one_of(work_building);
 					}
-					
-					// If home ID exists
-					if home_place_id != nil and home_place_id >= 0 {
-						home_place <- Building first_with (each.id = home_place_id);
-					}*/
-					
-					// If the working place is nil
-					//if working_place = nil {
-						if age < 18 {
-							working_place <- one_of(study_building);
-						} else if age >= 18 {
-							working_place <- one_of(work_building);
-						}
-			
-					//}
-					
-					// if the home place is nil
-					//if home_place = nil {
-						home_place <- one_of(home_building);
-					//}
-					
+		
+					home_place <- one_of(home_building);
 					location <- any_location_in(home_place.shape);
 					
 					if a.get_activity_type_string() = "work" and working_place != nil {
@@ -217,26 +170,6 @@ global {
 					} else {
 						do die();
 					}
-					
-					/*
-					if home_place = nil and age >= 18 {
-						home_place <- one_of(Building where (each.type = "staying_home"));
-					} else if home_place = nil and age < 18 {
-						Individual individual <- one_of(Individual where (each.age >= 18));
-						if (individual.home_place = nil) {
-							individual.home_place <- one_of(Building where (each.type = "staying_home"));
-						}
-	
-						home_place <- individual.home_place;
-					}
-	
-					if working_place = nil and age >= 18 {
-						working_place <- one_of(Building where (each.type = "working"));
-					} else if working_place = nil and age < 18 {
-						working_place <- one_of(Building where (each.type = "studying"));
-					}
-	
-					location <- any_location_in(home_place.shape);*/
 				}
 	
 			}
@@ -249,20 +182,12 @@ global {
 		// ############################ WARNING WARNING WIP IN PROGRESS TEST 
 		
 		// TODO ???????? wtf because Agents are not scheduled
-		
-		/*create TransportMovingIdmWrapper {
-			do die;
-		}*/
 
 		create Walk {
 			do die;
 		}
 
 		create Car {
-			do die;
-		}
-
-		create Bike {
 			do die;
 		}		
 	}
@@ -272,7 +197,6 @@ global {
 // The main experiment
 experiment "SwITCh" type: gui {
 	// Speed of the "controled car"
-	parameter "Micro level" var: micro_level category: "Models";
 	output {
 		display main_window type: opengl {
 			species Road;
@@ -280,11 +204,7 @@ experiment "SwITCh" type: gui {
 			species Building;
 			species Walk;
 			species Car;
-			species Bike;
 			species Individual;
-			
-			//species TransportMovingIdmWrapper;
-			//species MicroQueuedRoadIdmModel;
 		}
 
 	}

@@ -13,7 +13,5 @@ species EventManager control: event_manager {
 	// Get total size
 	int get_size {
 		return size;
-	}
-
-	
+	}	
 }
