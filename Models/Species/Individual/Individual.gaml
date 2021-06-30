@@ -55,6 +55,16 @@ species Individual skills: [scheduling/*, logging*/] {
 
 	// If true, can instantiate a bike
 	bool has_bike <- false;
+	
+	//Choosen mode 
+	string chosen_mode;
+	//target position
+	point target_point;
+	
+	//action that chose the mode, implemented in Individual decision
+	action update_mode {
+		chosen_mode <- "individual and not individual decision instance";
+	}
 
 	// The agenda
 	Agenda my_agenda <- world.create_agenda();
