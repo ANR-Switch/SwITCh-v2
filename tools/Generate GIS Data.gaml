@@ -99,8 +99,11 @@ global {
 		do blg_update_from_ign_data;
 		write "Buildings: updated from IGN the building dataset.";
 		
-		do blg_compute_type	;
+		do blg_compute_types;
 		write "Buildings: compute the main type.";
+		
+//		do blg_compute_closest_buildings;
+//		write "Buildings: compute the closest buildings, by activity.";		
 		
 		do blg_serialize_types;
 		write "Buildings: serialize types";
@@ -108,11 +111,11 @@ global {
 		do blg_default_values_levels_flats;				
 		write "Buildings: default values for flats and levels if needed.";
 	
-		map<Boundary, list<Building>> buildings_per_boundary <- blg_save();
-		write "Buildings: saved in shapefiles";		
+//		map<Boundary, list<Building>> buildings_per_boundary <- blg_save();
+//		write "Buildings: saved in shapefiles";		
 	
 	
-		map<string, list<Building>> buildings <- Building group_by (each.type);
+		map<string, list<Building>> buildings <- (Building where(!empty(each.types))) group_by (first(each.types));
 		loop ll over: buildings.values {
 			rgb col <- rnd_color(255);
 			ask ll parallel: parallel {
@@ -148,6 +151,17 @@ global {
 		do node_save;
 		write "Node: agents saved";
 
+
+		write "//--------------------------------------------------------------------------";
+		write "// Buildings: closest Buildings";
+		write "//--------------------------------------------------------------------------";
+
+		do blg_compute_closest_buildings;
+		write "Buildings: compute the closest buildings, by activity.";		
+			
+		map<Boundary, list<Building>> buildings_per_boundary <- blg_save();
+		write "Buildings: saved in shapefiles";		
+	
 
 		write "//--------------------------------------------------------------------------";
 		write "// Save boundaries";
@@ -312,22 +326,39 @@ global {
 		}
 	}
 	
-	action blg_compute_type {
+	action blg_compute_types {
 		ask Building parallel: parallel {
-			
+			list<string> list_activities <- [];
 			loop act over: types {
+				bool type_found <- false;
 				loop key_act over: activity_types_maps.keys {
 					if( activity_types_maps[key_act] contains act) {
-						type <- key_act;
+						list_activities << key_act;
+						type_found <- true;
 						break;
 					} 
 				}	
-				if(type = nil){write "*********** Building  type: " +  act + " unknown in the parameter file.";}
+				if(!type_found){write "*********** Building  type: " +  act + " unknown in the parameter file.";}
 			}
 			
-			if(type = nil) {type <- first(types);}	
+			types <- remove_duplicates(list_activities);			
 		}
 	}
+
+	action blg_compute_closest_buildings {
+		graph road_graph <- as_edge_graph(Road);
+		
+		ask Building parallel: parallel {
+			loop act over: activity_types_maps.keys {
+				Building b;
+				using topology(road_graph) {
+					b <- (Building where(act in each.types)) with_min_of(each distance_to self);
+				}
+				add b.id at: act to: closest_buildings;
+			}
+		}
+	}
+
 	
 	action blg_serialize_types  {
 		ask Building parallel: parallel{
@@ -370,12 +401,14 @@ global {
 				int i <- 1;
 				loop while: not empty(bds)  {
 					list<Building> bds_ <- nb_for_building_shapefile_split first bds;
-					save bds_ to:(dataset_path + infrastructure_folder + bd.name +"/buildings_" +i+".shp") type: shp attributes: ["id"::id,"sub_area"::boundary.name,"type"::type, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
+					save bds_ to:(dataset_path + infrastructure_folder + bd.name +"/buildings_" +i+".shp") type: shp 
+						attributes: ["id"::id,"sub_area"::boundary.name, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
 					bds <- bds - bds_;
 					i <- i + 1;
 				}
 			} else {
-				save bds to:dataset_path + infrastructure_folder + bd.name +"/buildings.shp" type: shp attributes: ["id"::id,"sub_area"::boundary.name,"type"::type, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
+				save bds to:dataset_path + infrastructure_folder + bd.name +"/buildings.shp" type: shp 
+					attributes: ["id"::id,"sub_area"::boundary.name, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels, "closest_blgds"::to_gaml(closest_buildings)];
 			}
 		}		
 		return buildings_per_boundary;
@@ -695,9 +728,11 @@ Indifférencié
 }
 species Building {
 	Boundary boundary;
-	string type;
+//	string type;
 	list<string> types;
 	string types_str;
+	map<string,string> closest_buildings;
+	
 	string building_att;
 	string shop_att;
 	string historic_att;
@@ -706,11 +741,14 @@ species Building {
 	string military_att;
 	string sport_att;
 	string leisure_att;
+	
 	float height;
 	string id;
 	int flats;
 	int levels;
 	rgb color;
+	
+	
 	aspect default {
 		draw shape color: color border: #black depth: (1 + flats) * 3;
 	}
