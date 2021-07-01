@@ -17,25 +17,7 @@ import "Species/Transport/Private/Car.gaml"
  * Setup the world
  */
 global {
-	//Information for decision
-	string weather <-"sunny" among:["sunny", "rainy"];
-	float gas_price <- 1.4; //price/liter
-	float subscription_price <- 30.0;
-	float ratio_cycleway<-0.5;
-	int bus_freq <- 7;
-	int bus_capacity <- 50;
-	list<string> type_mode <- ["car","bus","bike","walk"];
-	list<string> criteria <- ["comfort", "safety", "price","ecology","simplicity","time"];
-	
-	float car_speed <- 34.0#km/#h;
-	float bike_speed <- 15#km/#h;
-	float bus_speed <- 25#km/#h;
-	float walk_speed <- 4#km/#h;
-	
-	int nb_car<-0;
-	int nb_bus<-0;
-	int nb_bike<-0;
-	int nb_walk<-0;
+
 	
 	// If true set all mixed road to micro
 	bool micro_level <- false;

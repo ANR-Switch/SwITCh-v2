@@ -58,7 +58,6 @@ species Individual skills: [scheduling] {
 	//Choosen mode 
 	string chosen_mode;
 	//target position
-	point target_point;
 	
 	//action that chose the mode, implemented in Individual decision
 	action update_mode {
