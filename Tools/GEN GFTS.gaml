@@ -17,23 +17,28 @@ model GENGFTS
 
 global {
 
+	// Spatial files
 	shape_file boundary_shape_file <- shape_file("../Datasets/Castanet/Infrastructure/CASTANET-TOLOSAN/boundary.shp");
 	shape_file buildings_shape_file <- shape_file("../Datasets/Castanet/Infrastructure/CASTANET-TOLOSAN/buildings.shp");
 	
 	geometry shape <- envelope(boundary_shape_file);
 	
+	// GTFS files
 	csv_file stops_csv_file <- csv_file("../Datasets/Castanet/GFTS/stops.csv",",",string,true);
 	csv_file shapes_csv_file <- csv_file("../Datasets/Castanet/GFTS/shapes.csv",",",string,true);
 	csv_file trips_csv_file <- csv_file("../Datasets/Castanet/GFTS/trips.csv",",",string,true);
-
-//	csv_file stop_times_csv_file <- csv_file("../Datasets/Castanet/GFTS/stop_times.csv",",",string,true);	
-	csv_file stop_times_csv_file <- csv_file("../Datasets/Castanet/GFTS/GEN_stop_times.csv",",",string,true);
+	csv_file stop_times_csv_file <- crop_stop_time_file ? 
+			csv_file("../Datasets/Castanet/GFTS/stop_times.csv",",",string,true) : 
+			csv_file("../Datasets/Castanet/GFTS/GEN_stop_times.csv",",",string,true);
 	
 	date starting_date <- date ('1970-01-01 05:30:00');
 	float step <- 20 #s;
 	graph road_network;
 
+	// The global agenda of all the trips
 	list<pair<trip,date>> bus_agenda;
+	
+	bool crop_stop_time_file <- false;
 
 	init {
 		create boundary from: boundary_shape_file;
@@ -112,14 +117,15 @@ global {
 					"arrival_time"::date(stop_time_line[3],"HH:mm:ss"),
 					"departure_time"::date(stop_time_line[4],"HH:mm:ss")
 					]) to: t.stop_times;
-						
-	//			save stop_time_line to: "../Datasets/Castanet/GFTS/GEN_stop_times.csv" type: csv header: false rewrite: false;		
+				
+				if(crop_stop_time_file)	{
+					save stop_time_line to: "../Datasets/Castanet/GFTS/GEN_stop_times.csv" type: csv header: false rewrite: false;						
+				}			
 			}
 		}
 		
 		loop t over: trip {
 			date date_departure <- t.stop_times min_of( each["departure_time"] as date );
-//			write t.stop_times with_min_of(each["departure_time"] as date) as date;
 			bus_agenda << t::date_departure;
 		}
 		bus_agenda <- bus_agenda sort_by(each.value);
@@ -200,6 +206,7 @@ species point_road{
 species road {
 	string shape_id;
 	rgb color <- rnd_color(255);
+	
 	aspect default {
 		draw shape  color: color;
 	}	
