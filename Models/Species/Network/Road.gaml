@@ -214,14 +214,6 @@ species Road skills: [scheduling] {
 
 	// Clear transports
 	action clear_transports {
-		loop transport over: transports {
-		// Remove event from the event manager
-			ask transport {
-				do clear_events;
-			}
-
-		}
-
 		remove key: transports from: request_times;
 		remove from: transports all: true;
 	}
