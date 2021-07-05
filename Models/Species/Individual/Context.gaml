@@ -52,7 +52,3 @@ species Context {
 		
 	}
 }
-
-
-/* Insert your model definition here */
-
