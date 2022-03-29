@@ -84,7 +84,7 @@ global {
 		full_network <- as_driving_graph(Road, Crossroad);
 
 		//allows to choose the type of algorithm to use compute the shortest paths
-		full_network <- full_network with_optimizer_type optimizer_type;
+		full_network <- full_network with_shortest_path_algorithm optimizer_type;
 
 		//allows to define if the shortest paths computed should be memorized (in a cache) or not
 		full_network <- full_network use_cache memorize_shortest_paths;

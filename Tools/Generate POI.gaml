@@ -27,7 +27,7 @@ global {
 	
 	//optional
 	string osm_file_path <- dataset_path + "map.pbf";
-	string ign_building_file_path <-  dataset_path + "BATIMENT.shp"; 
+	string ign_building_file_path <-  dataset_path + "BATIMENT.shpFAKE"; 
 	
 	// Activity type buildings
 	file activities_file <- json_file(parameters_path + "Building type per activity type.json");
@@ -60,7 +60,7 @@ global {
 		write "Start the pre-processing process";
 		
 		do create_boundary;				
-		write "Boundary: agents created. Boundary: " + length(Boundary);
+		write "Boundary: agents created. Booundary: " + length(Boundary);
 		
 		osm_file osmfile <- retrieve_osm_data();
 		write "OSM data retrieved";
@@ -79,31 +79,35 @@ global {
 
 	
 		create Building from: ggs with:[building_att:: get("building"),shop_att::get("shop"), historic_att::get("historic"), amenity_att::get("amenity"),
-			office_att::get("office"), military_att::get("military"),sport_att::get("sport"),leisure_att::get("leisure"),
+			office_att::get("office"), military_att::get("military"),sport_att::get("sport"),leisure_att::get("lesure"),
 			height::float(get("height")), flats::int(get("building:flats")), levels::int(get("building:levels"))
+			, other_tags_att::string(get("other_tags"))
 		] {
 			shape <- shape simplification simplification_dist ;
 			id <- ""+int(self);
+					
+			if (shop_att != nil) {
+				write shop_att;
+			}
+		
 		}
 		write "Buildings: agents created. Buildings: " + length(Building);
 		
-		do blg_remove_outside_buildings;
-		write "Buildings: outside  buildings removed. Buildings: " + length(Building);
+		do blg_remove_outside_and_small_buildings;
+		write "Buildings: outside and too small buildings removed. Buildings: " + length(Building);
+		
+		ask Building where (each.shop_att != nil) {
+					write shop_att;
+		}
 		
 		do blg_assign_types;
 		write "Buildings: types assigned.";
 		
-		do blg_remove_small_buildings;
-		write "Buildings:  too small buildings removed. Buildings: " + length(Building);
+//		do blg_update_from_ign_data;
+//		write "Buildings: updated from IGN the building datasset.";
 		
-		do blg_update_from_ign_data;
-		write "Buildings: updated from IGN the building dataset.";
-		
-		do blg_compute_types;
+		do blg_compute_type	;
 		write "Buildings: compute the main type.";
-		
-//		do blg_compute_closest_buildings;
-//		write "Buildings: compute the closest buildings, by activity.";		
 		
 		do blg_serialize_types;
 		write "Buildings: serialize types";
@@ -111,11 +115,11 @@ global {
 		do blg_default_values_levels_flats;				
 		write "Buildings: default values for flats and levels if needed.";
 	
-//		map<Boundary, list<Building>> buildings_per_boundary <- blg_save();
-//		write "Buildings: saved in shapefiles";		
+		map<Boundary, list<Building>> buildings_per_boundary <- blg_save();
+		write "Buildings: saved in shapefiles";		
 	
 	
-		map<string, list<Building>> buildings <- (Building where(!empty(each.types))) group_by (first(each.types));
+		map<string, list<Building>> buildings <- Building group_by (each.type);
 		loop ll over: buildings.values {
 			rgb col <- rnd_color(255);
 			ask ll parallel: parallel {
@@ -124,59 +128,6 @@ global {
 		}
 
 		
-		write "//--------------------------------------------------------------------------";
-		write "// Roads and Nodes (intersections)";
-		write "//--------------------------------------------------------------------------";
-
-		
-		map<point, Node> nodes_map <- road_node_create(roads_intersection);	
-		write nodes_map;	
-		write "Roads and nodes: agents created";
-		
-		do road_keep_only_connected(list(Road));
-		write "Roads and node agents created";
-		
-		do node_creates_missing_node_from_roads;
-		write "Supplementary node agents created";
-		
-		do node_remove_nodes_out_of_roads;
-		write "Nodes: node agents filtered";
-		
-		do road_save;
-		write "Roads: road agents saved";
-		
-		map<Boundary, list<Node>> nodes_per_boundary <- node_update_boundaries();
-		write "Nodes: create missing Nodes from Roads.";
-
-		do node_save;
-		write "Node: agents saved";
-
-
-		write "//--------------------------------------------------------------------------";
-		write "// Buildings: closest Buildings";
-		write "//--------------------------------------------------------------------------";
-
-		do blg_compute_closest_buildings;
-		write "Buildings: compute the closest buildings, by activity.";		
-			
-		map<Boundary, list<Building>> buildings_per_boundary <- blg_save();
-		write "Buildings: saved in shapefiles";		
-	
-
-		write "//--------------------------------------------------------------------------";
-		write "// Save boundaries";
-		write "//--------------------------------------------------------------------------";
-
-		do boundaries_save(buildings_per_boundary, nodes_per_boundary);
-		write "Boundary saved";
-
-
-		write "//--------------------------------------------------------------------------";
-		write "// Satellite image";
-		write "//--------------------------------------------------------------------------";
-		 
-		do load_satellite_image; 
-		write "Satellite image: loaded.";		
 	}
 	
 	
@@ -211,7 +162,7 @@ global {
 		return osmfile;
 	}
 
-	action blg_remove_outside_buildings {
+	action blg_remove_outside_and_small_buildings {
 		ask Building {
 			list<Boundary> bds <- (Boundary overlapping location);
 			if empty(bds){
@@ -222,37 +173,41 @@ global {
 		}
 		
 		write "		Buildings outside of the boundary removed";
-	}
 	
-	action blg_remove_small_buildings {
-		ask Building where (each.shape.area < min_area_buildings) {
-			do die;
-		}
-		
-		write "		Too small building removed ";	
-	}	
+	}
 
 	action blg_assign_types {
+		
+		ask Building where (each.other_tags_att != nil) {
+				write sample(other_tags_att);
+			
+		}
+		
 		ask Building where ((each.shape.area = 0) and (each.shape.perimeter = 0)) parallel: parallel {
+			
+			
 			list<Building> bd <- Building overlapping self;
 			ask bd where (each.shape.area > 0) {
-				if (myself.sport_att != nil) {		types << myself.sport_att; }
-				if (myself.office_att != nil) {		types << myself.office_att; }
-				if (myself.military_att != nil) {	types << myself.military_att; }
-				if (myself.leisure_att != nil) {		types << myself.leisure_att; }
-				if (myself.amenity_att != nil) {	types << myself.amenity_att;  }
-				if (myself.shop_att != nil) {			types << myself.shop_att;}
-				if (myself.historic_att != nil) {	types << myself.historic_att;}
+				sport_att  <- myself.sport_att;
+				office_att  <- myself.office_att;
+				military_att  <- myself.military_att;
+				leisure_att  <- myself.leisure_att;
+				amenity_att  <- myself.amenity_att;
+				shop_att  <- myself.shop_att;
+				historic_att <- myself.historic_att;
 			}
 		}
 		write "		Buildings: information from other layers (point buildings) integrated";
 	
-		ask Building parallel: parallel{
+		ask Building parallel: parallel {			
+			
 			if (amenity_att != nil) {
 				types << amenity_att;
 			} 
 			if (shop_att != nil) {
 				types << shop_att;
+							write sample(shop_att);
+				
 			}
 			if (office_att != nil) {
 				types << office_att;
@@ -285,6 +240,12 @@ global {
 			do die;
 		}
 		write "		Building without any type removed. Buildings killed: " + nb_building_without_type;		
+		
+		ask Building where (each.shape.area < min_area_buildings) {
+			do die;
+		}
+		
+		write "		Too small building removed ";	
 	}
 	
 	action blg_update_from_ign_data {
@@ -326,39 +287,22 @@ global {
 		}
 	}
 	
-	action blg_compute_types {
+	action blg_compute_type {
 		ask Building parallel: parallel {
-			list<string> list_activities <- [];
+			
 			loop act over: types {
-				bool type_found <- false;
 				loop key_act over: activity_types_maps.keys {
 					if( activity_types_maps[key_act] contains act) {
-						list_activities << key_act;
-						type_found <- true;
+						type <- key_act;
 						break;
 					} 
 				}	
-				if(!type_found){write "*********** Building  type: " +  act + " unknown in the parameter file.";}
+				if(type = nil){write "*********** Building  type: " +  act + " unknown in the parameter file.";}
 			}
 			
-			types <- remove_duplicates(list_activities);			
+			if(type = nil) {type <- first(types);}	
 		}
 	}
-
-	action blg_compute_closest_buildings {
-		graph road_graph <- as_edge_graph(Road);
-		
-		ask Building parallel: parallel {
-			loop act over: activity_types_maps.keys {
-				Building b;
-				using topology(road_graph) {
-					b <- (Building where(act in each.types)) with_min_of(each distance_to self);
-				}
-				add b.id at: act to: closest_buildings;
-			}
-		}
-	}
-
 	
 	action blg_serialize_types  {
 		ask Building parallel: parallel{
@@ -367,7 +311,7 @@ global {
 			}
 			
 			if (length(types) > 1) {
-				loop i from: 1 to: length(types) - 1 {
+				loop i from: 0 to: length(types) - 1 {
 					types_str <-types_str + "," + types[i] ;
 				}
 			}
@@ -401,14 +345,12 @@ global {
 				int i <- 1;
 				loop while: not empty(bds)  {
 					list<Building> bds_ <- nb_for_building_shapefile_split first bds;
-					save bds_ to:(dataset_path + infrastructure_folder + bd.name +"/buildings_" +i+".shp") type: shp 
-						attributes: ["id"::id,"sub_area"::boundary.name, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
+					save bds_ to:(dataset_path + infrastructure_folder + bd.name +"/buildings_" +i+".shp") type: shp attributes: ["id"::id,"sub_area"::boundary.name,"type"::type, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
 					bds <- bds - bds_;
 					i <- i + 1;
 				}
 			} else {
-				save bds to:dataset_path + infrastructure_folder + bd.name +"/buildings.shp" type: shp 
-					attributes: ["id"::id,"sub_area"::boundary.name, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels, "closest_blgds"::to_gaml(closest_buildings)];
+				save bds to:dataset_path + infrastructure_folder + bd.name +"/buildings.shp" type: shp attributes: ["id"::id,"sub_area"::boundary.name,"type"::type, "types"::types_str , "flats"::flats,"height"::height, "levels"::levels];
 			}
 		}		
 		return buildings_per_boundary;
@@ -728,11 +670,9 @@ Indifférencié
 }
 species Building {
 	Boundary boundary;
-//	string type;
+	string type;
 	list<string> types;
 	string types_str;
-	map<string,string> closest_buildings;
-	
 	string building_att;
 	string shop_att;
 	string historic_att;
@@ -741,14 +681,12 @@ species Building {
 	string military_att;
 	string sport_att;
 	string leisure_att;
-	
+	string other_tags_att;
 	float height;
 	string id;
 	int flats;
 	int levels;
 	rgb color;
-	
-	
 	aspect default {
 		draw shape color: color border: #black depth: (1 + flats) * 3;
 	}
@@ -764,7 +702,7 @@ species Boundary {
 
 experiment generateGISdata type: gui {
 	output {
-		display map type: opengl axes: false{
+		display map type: opengl draw_env: false{
 			image file: dataset_path +"satellite.png"  transparency: 0.2 ;
 			species Building;
 			species Node;

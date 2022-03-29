@@ -32,7 +32,7 @@ global {
 		// Get resident mix per hour ['Residents', 'Non-résidents']
 		csv_file csv_residents <- csv_file("../Datasets/Castanet/Statistics/Mobiliscope/res_nb.csv");
 		list residents <- rows_list(csv_residents.contents) where (string(each[0]) = district_number);
-		list hourly_residents <- [];
+		list<list> hourly_residents <- [];
 		loop line over: residents {
 			add [line[2], line[3]] to: hourly_residents;
 		}
@@ -61,7 +61,6 @@ global {
 		bool bfirst <- true;
 		// First, we'll loop over the agendas to determine for each hour if the citizen is in the city (1) or not (0)
 		loop citizen over: agendas.pairs {
-			int hour <- 0;
 			int nbResident <- 0;
 			int nbNonResident <- 0;
 			int total;
@@ -90,7 +89,7 @@ global {
 		}
 	}
 	
-	action switchActivities(string id1, string id2, int act1, int act2,map<string,list> agendas,int hour){
+	action switchActivities(string id1, string id2, int act1, int act2,map<string,list<int>> agendas,int hour){
 		list<int> agenda1 <- agendas[id1];
 		list<int> agenda2 <- agendas[id2];
 		int tmp <- agendas[id1][hour];
