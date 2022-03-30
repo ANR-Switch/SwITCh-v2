@@ -107,7 +107,7 @@ global {
 		write " CREATION OF THE bus_agenda        ";
 		write "/==================================";	
 			
- 		loop stop_time_line over: rows_list(matrix(stop_times_csv_file)) {
+ 		loop stop_time_line over: rows_list(matrix<string>(stop_times_csv_file)) {
 			trip t <- trip first_with(each.trip_id = stop_time_line[0]);
 			stop s <- stop first_with(each.stop_id = stop_time_line[1]);
 			if(t != nil and s != nil){

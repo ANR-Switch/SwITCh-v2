@@ -32,9 +32,10 @@ global {
 		// Get resident mix per hour ['Residents', 'Non-résidents']
 		csv_file csv_residents <- csv_file("../Datasets/Castanet/Statistics/Mobiliscope/res_nb.csv");
 		list residents <- rows_list(csv_residents.contents) where (string(each[0]) = district_number);
-		list<list> hourly_residents <- [];
+		write residents;
+		list<list<int>> hourly_residents <- [];
 		loop line over: residents {
-			add [line[2], line[3]] to: hourly_residents;
+			add [line[2] as int, line[3] as int] to: hourly_residents;
 		}
 
 		// Get last mode mix per hour ['Mobilité douce', 'Vehicule motorisé privé', 'Transports public']
@@ -65,8 +66,8 @@ global {
 			int nbNonResident <- 0;
 			int total;
 			loop hour from: 0 to: 23 {
-				nbResident <- (list(hourly_residents[hour])[1]);
-				nbNonResident <- (list(hourly_residents[hour])[0]);
+				nbResident <- (hourly_residents[hour])[1];
+				nbNonResident <- (hourly_residents[hour])[0];
 				list h_act <- hourly_activities[hour];
 						bool resident <- rnd_choice([true::nbResident,false::nbNonResident]);
 						if(resident){
