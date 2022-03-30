@@ -183,7 +183,7 @@ global {
 		write "-> " + (starting_date + (machine_time / 1000));
 		
 		// ############################ WARNING WARNING WIP IN PROGRESS TEST 
-		
+
 		// TODO ???????? wtf because Agents are not scheduled
 
 		create Walk {
@@ -192,7 +192,9 @@ global {
 
 		create Car {
 			do die;
-		}		
+		}	
+		 
+			
 	}
 
 }
@@ -208,6 +210,14 @@ experiment "SwITCh" type: gui {
 			species Walk;
 			species Car;
 			species Individual;
+		}
+		display activities {
+			chart "act" type: series {
+				loop a over: activity_types {
+					data a value: Individual count( (each.current_activity != nil) and 
+								(activity_types[each.current_activity.type] = a));
+				}
+			}
 		}
 
 	}
