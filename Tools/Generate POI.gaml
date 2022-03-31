@@ -702,7 +702,7 @@ species Boundary {
 
 experiment generateGISdata type: gui {
 	output {
-		display map type: opengl draw_env: false{
+		display map type: opengl axes: false{
 			image file: dataset_path +"satellite.png"  transparency: 0.2 ;
 			species Building;
 			species Node;
