@@ -1,9 +1,43 @@
 {
-    "metro_boulot_dodo": [
+    "lazyTeleworking": [
         {
-            "starting_date" : 0.0,
+            "starting_date" : 28800.0,
+            "activity_type" : 8
+        },
+        {
+            "starting_date" : 64800.0,
+            "activity_type" : 4
+        }
+    ],
+    "lazyTeleworkingLeisure": [
+        {
+            "starting_date" : 28800.0,
+            "activity_type" : 8
+        },
+        {
+            "starting_date" : 64800.0,
+            "activity_type" : 6
+        },
+        {
+            "starting_date" : 70200.0,
+            "activity_type" : 4
+        }
+    ],
+    "lazyTeleworkingShop": [
+        {
+            "starting_date" : 28800.0,
+            "activity_type" : 8
+        },
+        {
+            "starting_date" : 64800.0,
             "activity_type" : 0
         },
+        {
+            "starting_date" : 70200.0,
+            "activity_type" : 4
+        }
+    ],
+    "worker": [
         {
             "starting_date" : 28800.0,
             "activity_type" : 7
@@ -13,14 +47,38 @@
             "activity_type" : 4
         }
     ],
-    "leazy": [
-        {
-            "starting_date" : 0.0,
-            "activity_type" : 0
-        },
+    "workerShop": [
         {
             "starting_date" : 28800.0,
             "activity_type" : 7
+        },
+        {
+            "starting_date" : 64800.0,
+            "activity_type" : 0
+        },
+        {
+            "starting_date" : 70200.0,
+            "activity_type" : 4
+        }
+    ],
+    "workerLeisure": [
+        {
+            "starting_date" : 28800.0,
+            "activity_type" : 7
+        },
+        {
+            "starting_date" : 64800.0,
+            "activity_type" : 6
+        },
+        {
+            "starting_date" : 70200.0,
+            "activity_type" : 4
+        }
+    ],
+    "young": [
+        {
+            "starting_date" : 28800.0,
+            "activity_type" : 2
         },
         {
             "starting_date" : 64800.0,

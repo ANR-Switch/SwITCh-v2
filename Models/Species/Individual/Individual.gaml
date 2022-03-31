@@ -267,6 +267,32 @@ species Individual skills: [scheduling] {
 	action leisure {
 		do compute_activity(refer_to as Activity, one_of(where(Building,(each.type="leisure")) closest_to(home_place,2)), event_date);
 	}
+	
+	action teleworking {
+		do compute_activity(refer_to as Activity, home_place, event_date);
+	}
+	
+	action studying {
+		do compute_activity(refer_to as Activity, working_place, event_date);
+	}
+	
+	action check_activity (Activity a) {
+		if a.get_activity_type_string() = "work" and working_place != nil {
+			do add_activity activity: a;						
+		} else if a.get_activity_type_string() = "studying" and working_place != nil {
+			do add_activity activity: a;						
+		} else if a.get_activity_type_string() = "familly" and home_place != nil {
+			do add_activity activity: a;
+		} else if a.get_activity_type_string() = "shopping" {
+			do add_activity activity: a;
+		} else if a.get_activity_type_string() = "leisure" {
+			do add_activity activity: a;
+		} else if a.get_activity_type_string() = "teleworking" {
+			do add_activity activity: a;
+		} else {
+			do die();
+		}
+	}
 
 	/**
 	 * Utilities

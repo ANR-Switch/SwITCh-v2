@@ -129,7 +129,7 @@ global {
 				
 		create Individual from: mobisim_individuals with: [id_building :: string(get("id_building")),id::int(get("id")),age::int(get("age")), sex::string(get("sex")), role::string(get("role")),  profile::string(get("activity")),  education::string(get("education")),  income::int(get("income")),  id_household::int(get("id_household"))] {
 			home_place <- Building first_with(each.id = id_building);
-			if(home_place = nil or length(Individual) >= 1000) {
+			if(home_place = nil or length(Individual) >= 3000) {
 				do die;
 			}  else {
 				location <- any_location_in(home_place);
@@ -149,39 +149,49 @@ global {
 			list<Building> study_building <- Building where (each.type = "studying");
 			list<Building> work_building <- Building where (each.type = "working");
 			list<Building> home_building <- Building where (each.type = "staying_home");
-			
-			loop activity over: list<map<string, unknown>>(fake_agenda_data["metro_boulot_dodo"]) {
-				date act_starting_time <- starting_date + int(activity["starting_date"]);
-				int act_type <- int(activity["activity_type"]);
 	
-				ask Individual {
-					// Add activity to all individuals
-					Activity a <- world.create_activity(act_starting_time + 1.0, act_type);
-				
-					if age < 18 {
-						working_place <- one_of(study_building);
-					} else if age >= 18 {
-						working_place <- one_of(work_building);
-					}
-		
-					home_place <- one_of(home_building);
-					location <- any_location_in(home_place.shape);
+			ask Individual {
+				if age < 18 {
+					working_place <- one_of(study_building);
 					
-					if a.get_activity_type_string() = "work" and working_place != nil {
-						do add_activity activity: a;						
-					} else if a.get_activity_type_string() = "studying" and working_place != nil {
-						do add_activity activity: a;						
-					} else if a.get_activity_type_string() = "familly" and home_place != nil {
-						do add_activity activity: a;
-					} else if a.get_activity_type_string() = "shopping" {
-						do add_activity activity: a;
-					} else if a.get_activity_type_string() = "leisure" {
-						do add_activity activity: a;
+					loop activity over: list<map<string, unknown>>(fake_agenda_data["young"]) {
+						int randomness <- one_of(range( - int(activity["starting_date"]) * 0.2, 0.2 * int(activity["starting_date"])));
+						randomness <- randomness * cos(randomness/0.25);
+						date act_starting_time <- starting_date + int(activity["starting_date"]) + randomness;
+						int act_type <- int(activity["activity_type"]);
+						// Add activity to all individuals
+						Activity a <- world.create_activity(act_starting_time + 1.0, act_type);
+			
+						home_place <- one_of(home_building);
+						location <- any_location_in(home_place.shape);
+						
+						do check_activity a: a;
+					}
+				} else if age >= 18 {
+					working_place <- one_of(work_building);
+					string edt <- "lazyTeleworking";
+					if flip(0.0){
+						edt <- "lazyTeleworking";
+					} else if flip(0.0) {
+						edt <- one_of(["lazyTeleworkingLeisure","lazyTeleworkingShop"]);
 					} else {
-						do die();
+						edt <- one_of(["worker","workerShop","workerLeisure"]);
+					}
+					loop activity over: list<map<string, unknown>>(fake_agenda_data[edt]) {
+						int randomness <- one_of(range( - int(activity["starting_date"]) * 0.2, 0.2 * int(activity["starting_date"])));
+						randomness <- randomness * cos(randomness/0.25);
+						date act_starting_time <- starting_date + int(activity["starting_date"]) + randomness;
+						int act_type <- int(activity["activity_type"]);
+						// Add activity to all individuals
+						Activity a <- world.create_activity(act_starting_time + 1.0, act_type);
+			
+						home_place <- one_of(home_building);
+						location <- any_location_in(home_place.shape);
+						
+						do check_activity a: a;
 					}
 				}
-	
+					
 			}
 		}
 		ask Individual {

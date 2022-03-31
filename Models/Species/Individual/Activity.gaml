@@ -13,7 +13,7 @@ import "Individual.gaml"
  */
 global {
 	// List of activities that the individuals can do
-	list<string> activity_types const: true <- ["shopping", "administration", "studying", "university", "familly", "healt", "leisure", "work", "other"];
+	list<string> activity_types const: true <- ["shopping", "administration", "studying", "university", "familly", "healt", "leisure", "work","teleworking", "other"];
 
 	// Create a new activity with starting time, type and duration
 	Activity create_activity (date activity_start_date, int activity_type) {
@@ -49,6 +49,10 @@ species Activity {
 				match "familly" {
 					do later the_action: familly at: myself.start_date refer_to: myself;
 				}
+				
+				match "studying" {
+					do later the_action: studying at: myself.start_date refer_to: myself;
+				}
 
 				match "work" {
 					do later the_action: work at: myself.start_date refer_to: myself;
@@ -60,6 +64,10 @@ species Activity {
 				
 				match "leisure" {
 					do later the_action: leisure at: myself.start_date refer_to: myself;
+				}
+				
+				match "teleworking"{
+					do later the_action: teleworking at: myself.start_date refer_to: myself;
 				}
 
 			}
