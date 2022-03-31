@@ -179,7 +179,7 @@ global {
 					}
 					loop activity over: list<map<string, unknown>>(fake_agenda_data[edt]) {
 						int randomness <- one_of(range( - int(activity["starting_date"]) * 0.2, 0.2 * int(activity["starting_date"])));
-						randomness <- randomness * cos(randomness/0.25);
+						randomness <- int(randomness * cos(randomness/0.25));
 						date act_starting_time <- starting_date + int(activity["starting_date"]) + randomness;
 						int act_type <- int(activity["activity_type"]);
 						// Add activity to all individuals
