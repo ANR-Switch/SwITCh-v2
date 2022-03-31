@@ -257,6 +257,16 @@ species Individual skills: [scheduling] {
 		}
 
 	}
+	
+	// Shopping action
+	action shopping {
+		do compute_activity(refer_to as Activity, one_of(where(Building,(each.type="shopping")) closest_to(home_place,2)), event_date);
+	}
+	
+	// Leisure action
+	action leisure {
+		do compute_activity(refer_to as Activity, one_of(where(Building,(each.type="leisure")) closest_to(home_place,2)), event_date);
+	}
 
 	/**
 	 * Utilities

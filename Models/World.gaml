@@ -20,7 +20,7 @@ global {
 
 	
 	// If true set all mixed road to micro
-	bool micro_level <- false;
+	bool micro_level <- true;
 	// Do we compute all the shortest path?
 	bool save_shortest_paths <- false;
 	bool load_shortest_paths <- true;
@@ -60,6 +60,9 @@ global {
 
 	// Networks
 	graph full_network;
+	
+	//Output
+	float totalJam <- 0.0 update: sum_of(Road, (each.max_capacity - each.current_capacity)/each.max_capacity)/length(Road);
 
 	// Init the model
 	init {
@@ -126,7 +129,7 @@ global {
 				
 		create Individual from: mobisim_individuals with: [id_building :: string(get("id_building")),id::int(get("id")),age::int(get("age")), sex::string(get("sex")), role::string(get("role")),  profile::string(get("activity")),  education::string(get("education")),  income::int(get("income")),  id_household::int(get("id_household"))] {
 			home_place <- Building first_with(each.id = id_building);
-			if(home_place = nil or length(Individual) >= 10000) {
+			if(home_place = nil or length(Individual) >= 1000) {
 				do die;
 			}  else {
 				location <- any_location_in(home_place);
@@ -146,7 +149,7 @@ global {
 			list<Building> study_building <- Building where (each.type = "studying");
 			list<Building> work_building <- Building where (each.type = "working");
 			list<Building> home_building <- Building where (each.type = "staying_home");
-						
+			
 			loop activity over: list<map<string, unknown>>(fake_agenda_data["metro_boulot_dodo"]) {
 				date act_starting_time <- starting_date + int(activity["starting_date"]);
 				int act_type <- int(activity["activity_type"]);
@@ -169,7 +172,11 @@ global {
 					} else if a.get_activity_type_string() = "studying" and working_place != nil {
 						do add_activity activity: a;						
 					} else if a.get_activity_type_string() = "familly" and home_place != nil {
-						do add_activity activity: a;						
+						do add_activity activity: a;
+					} else if a.get_activity_type_string() = "shopping" {
+						do add_activity activity: a;
+					} else if a.get_activity_type_string() = "leisure" {
+						do add_activity activity: a;
 					} else {
 						do die();
 					}
@@ -209,7 +216,18 @@ experiment "SwITCh" type: gui {
 			species Car;
 			species Individual;
 		}
-
+		display chart_display {
+			chart "Jam" type: series {
+				data "Jam" value: totalJam color: #red;
+			}
+		}
+		display activities {
+			chart "act" type: series {
+				loop a over: activity_types {
+					data a value: Individual count( (each.current_activity != nil) and 
+								(activity_types[each.current_activity.type] = a));
+				}
+			}
+		}
 	}
-
 }

@@ -53,6 +53,14 @@ species Activity {
 				match "work" {
 					do later the_action: work at: myself.start_date refer_to: myself;
 				}
+				
+				match "shopping" {
+					do later the_action: shopping at: myself.start_date refer_to: myself;
+				}
+				
+				match "leisure" {
+					do later the_action: leisure at: myself.start_date refer_to: myself;
+				}
 
 			}
 

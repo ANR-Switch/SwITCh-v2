@@ -66,7 +66,7 @@ species Road skills: [scheduling] {
 	float max_capacity <- shape.perimeter * lanes min: 10.0;
 
 	// Actual free space capacity of the road (in meters)
-	float current_capacity <- max_capacity min: 0.0 max: max_capacity;
+	float current_capacity <- max_capacity min: 0.0 max: max_capacity ;
 	
 	// Jam treshold
 	float jam_treshold <- 0.75;
@@ -154,6 +154,9 @@ species Road skills: [scheduling] {
 				}
 			}
 		}
+//		ask get_transports() {
+//			jam_duration <- 0.0;
+//		}
 		
 		// Remove transport (pop first)
 		do remove_transport(transport);
@@ -319,6 +322,9 @@ species Road skills: [scheduling] {
 	float get_road_travel_time (Transport transport, float distance_to_target) {
 		float free_flow_travel_time <- get_free_flow_travel_time(transport, distance_to_target);
 		float ratio <- ((max_capacity - current_capacity) / max_capacity);
+//		if ratio = 0.0 {
+//			ratio <- 0.1;
+//		}
 		float travel_time <- free_flow_travel_time * (1.0 + 0.15 * ratio ^ 4);
 		return travel_time with_precision 3;
 	}
