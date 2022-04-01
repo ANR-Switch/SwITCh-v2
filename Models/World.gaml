@@ -12,6 +12,7 @@ import "Species/Building.gaml"
 import "Species/Network/Road.gaml"
 import "Species/Network/Crossroad.gaml"
 import "Species/Transport/Private/Car.gaml"
+import "Species/Individual/New_Agendas_Mobiliscope.gaml"
 
 /** 
  * Setup the world
@@ -27,7 +28,7 @@ global {
 
 	// Starting date of the simulation 
 
-	date starting_date <- date([1970, 1, 1, 0, 0, 0]);
+	date starting_date <- date([1970, 1, 1, 4, 0, 0]);
 	float step <- 60#seconds;
 	float seed <- 424242.0;
 
@@ -129,7 +130,7 @@ global {
 				
 		create Individual from: mobisim_individuals with: [id_building :: string(get("id_building")),id::int(get("id")),age::int(get("age")), sex::string(get("sex")), role::string(get("role")),  profile::string(get("activity")),  education::string(get("education")),  income::int(get("income")),  id_household::int(get("id_household"))] {
 			home_place <- Building first_with(each.id = id_building);
-			if(home_place = nil or length(Individual) >= 3000) {
+			if(home_place = nil or length(Individual) >= 1000) {
 				do die;
 			}  else {
 				location <- any_location_in(home_place);
@@ -149,47 +150,64 @@ global {
 			list<Building> study_building <- Building where (each.type = "studying");
 			list<Building> work_building <- Building where (each.type = "working");
 			list<Building> home_building <- Building where (each.type = "staying_home");
-	
+			
+			loop line over: activities {
+			add [int(line[2]), int(line[3]), int(line[4]), int(line[5]), int(line[6])] to: hourly_activities;
+			}
+			list<int> dans_la_zone <- [];
+			loop elem over: hourly_activities {
+				add int(sum(elem)) to: dans_la_zone ;
+			}
+			max_dans_la_zone <- max(dans_la_zone);
+			
+			//Génération, pas encore parfaite, de génération d'agenda. Il faut encore faire la distinction entre les ages
 			ask Individual {
 				if age < 18 {
 					working_place <- one_of(study_building);
+					home_place <- one_of(home_building);
+					location <- any_location_in(home_place.shape);
 					
-					loop activity over: list<map<string, unknown>>(fake_agenda_data["young"]) {
-						int randomness <- one_of(range( - int(activity["starting_date"]) * 0.2, 0.2 * int(activity["starting_date"])));
-						randomness <- int(randomness * cos(randomness/0.25));
-						date act_starting_time <- starting_date + int(activity["starting_date"]) + randomness;
-						int act_type <- int(activity["activity_type"]);
-						// Add activity to all individuals
-						Activity a <- world.create_activity(act_starting_time + 1.0, act_type);
-			
-						home_place <- one_of(home_building);
-						location <- any_location_in(home_place.shape);
-						
-						do check_activity a: a;
-					}
+					//Génère les agendas à partir des données Mobiliscope
+					do agenda_Gen;
+					
+					//Ancienne génération d'agenda à la mano
+//					loop activity over: list<map<string, unknown>>(fake_agenda_data["young"]) {
+//						int randomness <- one_of(range( - int(activity["starting_date"]) * 0.2, 0.2 * int(activity["starting_date"])));
+//						randomness <- int(randomness * cos(randomness/0.25));
+//						date act_starting_time <- starting_date + int(activity["starting_date"]) + randomness;
+//						int act_type <- int(activity["activity_type"]);
+//						// Add activity to all individuals
+//						Activity a <- world.create_activity(act_starting_time + 1.0, act_type);
+//						
+//						do check_activity a: a;
+//					}
 				} else if age >= 18 {
 					working_place <- one_of(work_building);
-					string edt <- "lazyTeleworking";
-					if flip(0.0){
-						edt <- "lazyTeleworking";
-					} else if flip(0.0) {
-						edt <- one_of(["lazyTeleworkingLeisure","lazyTeleworkingShop"]);
-					} else {
-						edt <- one_of(["worker","workerShop","workerLeisure"]);
-					}
-					loop activity over: list<map<string, unknown>>(fake_agenda_data[edt]) {
-						int randomness <- one_of(range( - int(activity["starting_date"]) * 0.2, 0.2 * int(activity["starting_date"])));
-						randomness <- int(randomness * cos(randomness/0.25));
-						date act_starting_time <- starting_date + int(activity["starting_date"]) + randomness;
-						int act_type <- int(activity["activity_type"]);
-						// Add activity to all individuals
-						Activity a <- world.create_activity(act_starting_time + 1.0, act_type);
-			
-						home_place <- one_of(home_building);
-						location <- any_location_in(home_place.shape);
-						
-						do check_activity a: a;
-					}
+					home_place <- one_of(home_building);
+					location <- any_location_in(home_place.shape);
+					
+					//Génère les agendas à partir des données Mobiliscope
+					do agenda_Gen;
+					
+					//Ancienne génération d'agenda à la mano
+//					string edt <- "lazyTeleworking";
+//					if flip(0.0){
+//						edt <- "lazyTeleworking";
+//					} else if flip(0.0) {
+//						edt <- one_of(["lazyTeleworkingLeisure","lazyTeleworkingShop"]);
+//					} else {
+//						edt <- one_of(["worker","workerShop","workerLeisure"]);
+//					}
+//					loop activity over: list<map<string, unknown>>(fake_agenda_data[edt]) {
+//						int randomness <- one_of(range( - int(activity["starting_date"]) * 0.2, 0.2 * int(activity["starting_date"])));
+//						randomness <- int(randomness * cos(randomness/0.25));
+//						date act_starting_time <- starting_date + int(activity["starting_date"]) + randomness;
+//						int act_type <- int(activity["activity_type"]);
+//						// Add activity to all individuals
+//						Activity a <- world.create_activity(act_starting_time + 1.0, act_type);
+//						
+//						do check_activity a: a;
+//					}
 				}
 					
 			}

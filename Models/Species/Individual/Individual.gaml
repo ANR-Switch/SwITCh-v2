@@ -307,6 +307,22 @@ species Individual skills: [scheduling] {
 
 		return nil;
 	}
+	
+	//Génération des agenda à partir des donnés mobiliscopes
+	action agenda_Gen{
+		date startD <- starting_date;
+//		Activity a <- world.create_activity(startD + 1.0, index_of(activity_types, actionP[4]));
+//		do check_activity a: a;
+		loop i from: 1 to: (length(hourly_activities) - 1) {
+			loop k from: 0 to: (length(hourly_activities[i]) - 1){
+				if flip((hourly_activities[i][k] - hourly_activities[i-1][k])/max_dans_la_zone){
+					Activity b <- world.create_activity(startD + i * 3600, index_of(activity_types, actionP[k]));
+					do check_activity a: b;
+					break;
+				}
+			}
+		}
+	}
 
 	/**
 	 * Aspects
